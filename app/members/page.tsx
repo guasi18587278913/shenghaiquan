@@ -483,7 +483,7 @@ export default function MembersPage() {
             following: selectedMember.following,
             projects: selectedMember.projects,
             verified: selectedMember.verified,
-            status: selectedMember.status
+            status: selectedMember.status as 'online' | 'busy' | 'offline'
           }}
           size="large"
         />
