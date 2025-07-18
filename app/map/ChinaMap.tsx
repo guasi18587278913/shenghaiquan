@@ -52,12 +52,45 @@ export default function ChinaMap({ cities, onCityClick, showHeatmap, showConnect
     // 动态加载中国地图数据
     const loadMapData = async () => {
       try {
-        const response = await fetch('https://geo.datav.aliyun.com/areas_v3/bound/100000_full.json')
-        const geoJson = await response.json()
-        setMapData(geoJson)
+        // 尝试多个数据源
+        const dataSources = [
+          '/data/china.json',  // 本地数据优先
+          'https://geo.datav.aliyun.com/areas_v3/bound/100000_full.json',
+          'https://unpkg.com/echarts@5.4.3/map/json/china.json'
+        ]
         
-        // 注册地图
-        echarts.registerMap('china', geoJson)
+        let geoJson = null
+        let loadError = null
+        
+        for (const source of dataSources) {
+          try {
+            console.log(`Trying to load map data from: ${source}`)
+            const response = await fetch(source)
+            if (response.ok) {
+              geoJson = await response.json()
+              console.log('Map data loaded successfully from:', source)
+              break
+            }
+          } catch (error) {
+            loadError = error
+            console.warn(`Failed to load from ${source}:`, error)
+          }
+        }
+        
+        if (geoJson) {
+          setMapData(geoJson)
+          // 注册地图
+          echarts.registerMap('china', geoJson)
+        } else {
+          console.error('Failed to load map data from all sources:', loadError)
+          // 使用简化的地图数据作为备用方案
+          const fallbackData = {
+            type: 'FeatureCollection',
+            features: []
+          }
+          setMapData(fallbackData)
+          echarts.registerMap('china', fallbackData)
+        }
       } catch (error) {
         console.error('Failed to load map data:', error)
       }
