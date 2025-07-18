@@ -85,11 +85,11 @@ export default function ChinaMap({ cities, onCityClick, showHeatmap, showConnect
           console.error('Failed to load map data from all sources:', loadError)
           // 使用简化的地图数据作为备用方案
           const fallbackData = {
-            type: 'FeatureCollection',
+            type: 'FeatureCollection' as const,
             features: []
           }
           setMapData(fallbackData)
-          echarts.registerMap('china', fallbackData)
+          echarts.registerMap('china', fallbackData as any)
         }
       } catch (error) {
         console.error('Failed to load map data:', error)
