@@ -44,3 +44,11 @@ next-env.d.ts
 
 # uploads
 /public/uploads/
+
+# database
+/prisma/dev.db
+/prisma/dev.db-journal
+
+# temporary files
+.next 2/
+clean-and-start.sh

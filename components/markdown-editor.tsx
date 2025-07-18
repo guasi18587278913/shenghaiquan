@@ -37,7 +37,7 @@ export function MarkdownEditor({
         textareaProps={{
           placeholder: '支持 Markdown 语法，可以插入代码、图片、链接等...',
           ...textareaProps
-        }}
+        } as any}
       />
     </div>
   )

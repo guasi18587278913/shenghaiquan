@@ -50,7 +50,7 @@ async function main() {
       create: {
         phone: "13900000001",
         password: assistantPassword,
-        name: "王助教",
+        name: "王老师",
         role: "ASSISTANT",
         bio: "资深前端开发者，精通React/Next.js，负责基础篇课程辅导",
         skills: JSON.stringify(["React", "Next.js", "TypeScript", "前端开发"]),
