@@ -5,15 +5,16 @@ import { prisma } from "@/lib/prisma"
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const session = await getServerSession(authOptions)
     if (!session) {
       return NextResponse.json({ error: "请先登录" }, { status: 401 })
     }
 
-    const postId = params.id
+    const postId = id
 
     // 检查是否已经点赞
     const existingLike = await prisma.like.findUnique({

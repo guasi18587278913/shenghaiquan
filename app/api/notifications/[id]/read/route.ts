@@ -6,9 +6,10 @@ import { prisma } from '@/lib/prisma'
 // 标记单个通知为已读
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const session = await getServerSession(authOptions)
     
     if (!session) {
@@ -18,7 +19,7 @@ export async function POST(
       )
     }
 
-    const notificationId = params.id
+    const notificationId = id
 
     // 更新通知状态（只能更新自己的通知）
     const result = await prisma.notification.updateMany({

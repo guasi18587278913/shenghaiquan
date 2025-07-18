@@ -6,9 +6,10 @@ import prisma from "@/lib/prisma"
 // POST /api/events/[id]/participate - 参与活动
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const session = await getServerSession(authOptions)
     if (!session) {
       return NextResponse.json(
@@ -20,7 +21,7 @@ export async function POST(
     // 检查活动是否存在
     const event = await prisma.event.findUnique({
       where: { 
-        id: params.id,
+        id,
         isPublished: true,
       },
       include: {
@@ -51,7 +52,7 @@ export async function POST(
     const existingParticipation = await prisma.eventParticipant.findUnique({
       where: {
         eventId_userId: {
-          eventId: params.id,
+          eventId: id,
           userId: session.user.id,
         },
       },
@@ -75,7 +76,7 @@ export async function POST(
     // 创建参与记录
     const participation = await prisma.eventParticipant.create({
       data: {
-        eventId: params.id,
+        eventId: id,
         userId: session.user.id,
       },
     })
@@ -87,7 +88,7 @@ export async function POST(
         type: "EVENT",
         title: "活动报名成功",
         content: `您已成功报名参加「${event.title}」`,
-        link: `/calendar/${params.id}`,
+        link: `/calendar/${id}`,
       },
     })
 
@@ -104,9 +105,10 @@ export async function POST(
 // DELETE /api/events/[id]/participate - 取消参与活动
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const session = await getServerSession(authOptions)
     if (!session) {
       return NextResponse.json(
@@ -117,7 +119,7 @@ export async function DELETE(
 
     // 检查活动是否存在
     const event = await prisma.event.findUnique({
-      where: { id: params.id },
+      where: { id },
     })
 
     if (!event) {
@@ -139,7 +141,7 @@ export async function DELETE(
     const participation = await prisma.eventParticipant.findUnique({
       where: {
         eventId_userId: {
-          eventId: params.id,
+          eventId: id,
           userId: session.user.id,
         },
       },
@@ -166,7 +168,7 @@ export async function DELETE(
         type: "EVENT",
         title: "已取消活动报名",
         content: `您已取消参加「${event.title}」`,
-        link: `/calendar/${params.id}`,
+        link: `/calendar/${id}`,
       },
     })
 

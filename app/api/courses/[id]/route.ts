@@ -6,10 +6,11 @@ import { prisma } from "@/lib/prisma"
 // 获取课程详情
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const courseId = params.id
+    const { id } = await params
+    const courseId = id
     const session = await getServerSession(authOptions)
 
     const course = await prisma.course.findUnique({
@@ -46,7 +47,7 @@ export async function GET(
 
     // 检查用户是否已报名
     let enrollment = null
-    let progress = []
+    let progress: any[] = []
 
     if (session) {
       enrollment = await prisma.enrollment.findUnique({

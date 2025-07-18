@@ -6,9 +6,10 @@ import { prisma } from '@/lib/prisma'
 // 更新章节学习进度
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const session = await getServerSession(authOptions)
     
     if (!session) {
@@ -27,7 +28,7 @@ export async function POST(
 
     // 获取章节信息
     const chapter = await prisma.chapter.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: { course: true }
     })
 
@@ -60,7 +61,7 @@ export async function POST(
       where: {
         userId_chapterId: {
           userId: session.user.id,
-          chapterId: params.id
+          chapterId: id
         }
       },
       update: {
@@ -71,7 +72,7 @@ export async function POST(
       },
       create: {
         userId: session.user.id,
-        chapterId: params.id,
+        chapterId: id,
         watchTime: watchTime || 0,
         lastPosition: lastPosition || 0,
         isCompleted: isCompleted || false,
@@ -133,9 +134,10 @@ export async function POST(
 // 获取单个章节的学习进度
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const session = await getServerSession(authOptions)
     
     if (!session) {
@@ -149,7 +151,7 @@ export async function GET(
       where: {
         userId_chapterId: {
           userId: session.user.id,
-          chapterId: params.id
+          chapterId: id
         }
       }
     })

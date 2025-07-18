@@ -7,10 +7,11 @@ import { sendCommentNotification } from "@/lib/notifications"
 // 获取评论列表
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const postId = params.id
+    const { id } = await params
+    const postId = id
 
     const comments = await prisma.comment.findMany({
       where: {
@@ -63,15 +64,16 @@ export async function GET(
 // 发布评论
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const session = await getServerSession(authOptions)
     if (!session) {
       return NextResponse.json({ error: "请先登录" }, { status: 401 })
     }
 
-    const postId = params.id
+    const postId = id
     const { content, parentId } = await request.json()
 
     if (!content || content.trim().length === 0) {
@@ -118,7 +120,7 @@ export async function POST(
       await sendCommentNotification(
         post.userId,
         session.user.name || '用户',
-        post.title,
+        post.title || '无标题',
         postId
       )
     }

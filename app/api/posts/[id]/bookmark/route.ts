@@ -6,9 +6,10 @@ import { prisma } from '@/lib/prisma'
 // 检查是否已收藏
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const session = await getServerSession(authOptions)
     
     if (!session) {
@@ -22,7 +23,7 @@ export async function GET(
       where: {
         userId_postId: {
           userId: session.user.id,
-          postId: params.id
+          postId: id
         }
       }
     })
@@ -41,9 +42,10 @@ export async function GET(
 // 收藏或取消收藏
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const session = await getServerSession(authOptions)
     
     if (!session) {
@@ -53,7 +55,7 @@ export async function POST(
       )
     }
 
-    const postId = params.id
+    const postId = id
 
     // 检查帖子是否存在
     const post = await prisma.post.findUnique({

@@ -8,12 +8,13 @@ import { EventType } from "@prisma/client"
 // GET /api/events/[id] - 获取单个活动详情
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const event = await prisma.event.findUnique({
       where: { 
-        id: params.id,
+        id,
         isPublished: true,
       },
       include: {
@@ -23,7 +24,7 @@ export async function GET(
               select: {
                 id: true,
                 name: true,
-                avatarUrl: true,
+                avatar: true,
               },
             },
           },
@@ -55,7 +56,7 @@ export async function GET(
       const participation = await prisma.eventParticipant.findUnique({
         where: {
           eventId_userId: {
-            eventId: params.id,
+            eventId: id,
             userId: session.user.id,
           },
         },
@@ -92,9 +93,10 @@ const updateEventSchema = z.object({
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const session = await getServerSession(authOptions)
     if (!session) {
       return NextResponse.json(
@@ -122,7 +124,7 @@ export async function PUT(
     // 如果更新了时间，验证时间逻辑
     if (validatedData.startTime || validatedData.endTime) {
       const event = await prisma.event.findUnique({
-        where: { id: params.id },
+        where: { id },
         select: { startTime: true, endTime: true },
       })
 
@@ -145,7 +147,7 @@ export async function PUT(
     }
 
     const updatedEvent = await prisma.event.update({
-      where: { id: params.id },
+      where: { id },
       data: validatedData,
       include: {
         _count: {
@@ -160,7 +162,7 @@ export async function PUT(
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: "输入数据无效", details: error.errors },
+        { error: "输入数据无效", details: error.issues },
         { status: 400 }
       )
     }
@@ -176,9 +178,10 @@ export async function PUT(
 // DELETE /api/events/[id] - 删除活动（需要管理员权限）
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const session = await getServerSession(authOptions)
     if (!session) {
       return NextResponse.json(
@@ -202,7 +205,7 @@ export async function DELETE(
 
     // 检查活动是否存在
     const event = await prisma.event.findUnique({
-      where: { id: params.id },
+      where: { id },
     })
 
     if (!event) {
@@ -214,7 +217,7 @@ export async function DELETE(
 
     // 删除活动（会级联删除参与记录）
     await prisma.event.delete({
-      where: { id: params.id },
+      where: { id },
     })
 
     return NextResponse.json({ message: "活动已删除" })

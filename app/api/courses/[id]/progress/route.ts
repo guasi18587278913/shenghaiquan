@@ -6,9 +6,10 @@ import { prisma } from '@/lib/prisma'
 // 获取课程学习进度
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const session = await getServerSession(authOptions)
     
     if (!session) {
@@ -23,7 +24,7 @@ export async function GET(
       where: {
         userId_courseId: {
           userId: session.user.id,
-          courseId: params.id
+          courseId: id
         }
       }
     })
@@ -37,7 +38,7 @@ export async function GET(
 
     // 获取课程章节和进度
     const course = await prisma.course.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         chapters: {
           orderBy: { order: 'asc' },

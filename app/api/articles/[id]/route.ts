@@ -8,12 +8,13 @@ import { ArticleCategory } from "@prisma/client"
 // GET /api/articles/[id] - 获取单篇文章详情
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const article = await prisma.article.findUnique({
       where: { 
-        id: params.id,
+        id: id,
         isPublished: true,
       },
     })
@@ -27,7 +28,7 @@ export async function GET(
 
     // 增加浏览次数
     await prisma.article.update({
-      where: { id: params.id },
+      where: { id: id },
       data: {
         viewCount: {
           increment: 1,
@@ -63,9 +64,10 @@ const updateArticleSchema = z.object({
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const session = await getServerSession(authOptions)
     if (!session) {
       return NextResponse.json(
@@ -92,7 +94,7 @@ export async function PUT(
 
     // 检查文章是否存在
     const existingArticle = await prisma.article.findUnique({
-      where: { id: params.id },
+      where: { id: id },
     })
 
     if (!existingArticle) {
@@ -118,7 +120,7 @@ export async function PUT(
     }
 
     const updatedArticle = await prisma.article.update({
-      where: { id: params.id },
+      where: { id: id },
       data: {
         ...validatedData,
         tags,
@@ -130,7 +132,7 @@ export async function PUT(
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: "输入数据无效", details: error.errors },
+        { error: "输入数据无效", details: error.issues },
         { status: 400 }
       )
     }
@@ -146,9 +148,10 @@ export async function PUT(
 // DELETE /api/articles/[id] - 删除文章（需要管理员权限）
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const session = await getServerSession(authOptions)
     if (!session) {
       return NextResponse.json(
@@ -172,7 +175,7 @@ export async function DELETE(
 
     // 检查文章是否存在
     const article = await prisma.article.findUnique({
-      where: { id: params.id },
+      where: { id: id },
     })
 
     if (!article) {
@@ -184,7 +187,7 @@ export async function DELETE(
 
     // 删除文章
     await prisma.article.delete({
-      where: { id: params.id },
+      where: { id: id },
     })
 
     return NextResponse.json({ message: "文章已删除" })
