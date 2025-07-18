@@ -1,380 +1,551 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Search, MapPin, Clock, Star, Users, Circle, Code, Palette, Database, Globe } from "lucide-react"
-import { formatDistanceToNow } from "date-fns"
-import { zhCN } from "date-fns/locale"
+import { useState, useMemo } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { MemberInfoModal } from '@/components/member-info-modal'
+import { 
+  Search, 
+  Filter, 
+  MapPin, 
+  Briefcase, 
+  Star, 
+  Mail, 
+  MessageCircle,
+  Calendar,
+  TrendingUp,
+  Award,
+  Users,
+  Eye,
+  UserPlus,
+  ChevronDown,
+  X,
+  Sparkles,
+  Zap,
+  Heart,
+  Share2,
+  Globe,
+  Github,
+  Linkedin,
+  Twitter,
+  Clock,
+  BarChart3,
+  Target,
+  Rocket,
+  Code,
+  Palette,
+  Megaphone,
+  Cpu,
+  Shield,
+  Waves,
+  Map,
+  MessageSquare,
+  Send,
+  GraduationCap,
+  CheckCircle
+} from 'lucide-react'
 
-const skillIcons: Record<string, any> = {
-  "Next.js": Code,
-  "AI编程": Star,
-  "产品设计": Palette,
-  "Python": Code,
-  "机器学习": Database,
-  "前端开发": Globe,
-  "UI设计": Palette,
-  "全栈开发": Code,
+// 技能图标映射
+const skillIcons: { [key: string]: any } = {
+  'AI开发': Cpu,
+  '产品设计': Palette,
+  '全栈开发': Code,
+  '市场营销': Megaphone,
+  '数据分析': BarChart3,
+  '安全专家': Shield,
+  'UI/UX': Target,
+  '项目管理': Briefcase
 }
 
-interface Member {
-  id: string
-  name: string
-  bio: string
-  location?: string
-  skills: string[]
-  level: number
-  points: number
-  isOnline: boolean
-  createdAt: Date
-  role: string
-  _count: {
-    posts: number
-    followers: number
-    following: number
+// 模拟成员数据
+const mockMembers = [
+  {
+    id: 1,
+    name: '刘小排',
+    avatar: '/avatars/刘小排.jpg',
+    role: '深海圈创始人',
+    title: 'AI产品专家',
+    location: '上海',
+    joinTime: '2023-01',
+    joinDate: '2023年1月6日',
+    level: 'expert',
+    verified: true,
+    isCoach: true,
+    skills: ['AI开发', '产品设计', '全栈开发'],
+    projects: 12,
+    followers: 3456,
+    following: 234,
+    bio: '专注于AI产品开发和出海业务，帮助开发者实现技术变现。深海圈创始人，多年海外产品经验。',
+    achievements: ['金牌导师', '千粉达人', '优质创作者'],
+    recentActivity: '刚刚发布了新的AI产品开发教程',
+    matchScore: 95,
+    status: 'online',
+    lastSeen: '现在在线',
+    socialLinks: {
+      github: 'liuxiaopai',
+      twitter: 'liuxiaopai',
+      linkedin: 'liuxiaopai'
+    }
+  },
+  {
+    id: 2,
+    name: '张三',
+    avatar: '/avatars/user2.jpg',
+    role: 'AI工程师',
+    title: '深度学习专家',
+    location: '北京',
+    joinTime: '2023-03',
+    joinDate: '2023年3月15日',
+    level: 'senior',
+    verified: true,
+    isCoach: false,
+    skills: ['AI开发', '数据分析', 'Python'],
+    projects: 8,
+    followers: 1234,
+    following: 156,
+    bio: '专注于深度学习和计算机视觉，在AI领域有5年以上经验。',
+    achievements: ['技术达人', '活跃贡献者'],
+    recentActivity: '完成了图像识别项目',
+    matchScore: 88,
+    status: 'online',
+    lastSeen: '现在在线'
+  },
+  {
+    id: 3,
+    name: 'Emily Chen',
+    avatar: '/avatars/user3.jpg',
+    role: '产品经理',
+    title: '海外产品专家',
+    location: '旧金山',
+    joinTime: '2023-02',
+    joinDate: '2023年2月8日',
+    level: 'expert',
+    verified: true,
+    isCoach: true,
+    skills: ['产品设计', '市场营销', '数据分析'],
+    projects: 10,
+    followers: 4567,
+    following: 345,
+    bio: '硅谷产品经理，专注于AI SaaS产品的全球化战略。',
+    achievements: ['金牌导师', '海外专家', '千粉达人'],
+    recentActivity: '分享了出海产品方法论',
+    matchScore: 96,
+    status: 'busy',
+    lastSeen: '5分钟前'
+  },
+  {
+    id: 4,
+    name: '李四',
+    avatar: '/avatars/user4.jpg',
+    role: '全栈开发',
+    title: 'React专家',
+    location: '深圳',
+    joinTime: '2023-05',
+    joinDate: '2023年5月20日',
+    level: 'intermediate',
+    verified: false,
+    isCoach: false,
+    skills: ['全栈开发', 'React', 'Node.js'],
+    projects: 6,
+    followers: 876,
+    following: 234,
+    bio: '热爱开源，专注于React生态系统和现代前端开发。',
+    achievements: ['开源贡献者'],
+    recentActivity: '参与了开源项目',
+    matchScore: 76,
+    status: 'offline',
+    lastSeen: '2小时前'
+  },
+  {
+    id: 5,
+    name: '王五',
+    avatar: '/avatars/user5.jpg',
+    role: 'UI/UX设计师',
+    title: '交互设计专家',
+    location: '杭州',
+    joinTime: '2023-06',
+    joinDate: '2023年6月10日',
+    level: 'senior',
+    verified: true,
+    isCoach: true,
+    skills: ['UI/UX', '产品设计', 'Figma'],
+    projects: 15,
+    followers: 2341,
+    following: 432,
+    bio: '10年设计经验，专注于AI产品的用户体验设计。',
+    achievements: ['设计大师', '优质创作者'],
+    recentActivity: '发布了新的设计系统',
+    matchScore: 92,
+    status: 'online',
+    lastSeen: '现在在线'
+  },
+  {
+    id: 6,
+    name: '赵六',
+    avatar: '/avatars/user6.jpg',
+    role: '数据科学家',
+    title: 'ML工程师',
+    location: '成都',
+    joinTime: '2023-07',
+    joinDate: '2023年7月1日',
+    level: 'intermediate',
+    verified: false,
+    isCoach: false,
+    skills: ['数据分析', 'AI开发', 'Python'],
+    projects: 5,
+    followers: 567,
+    following: 123,
+    bio: '专注于机器学习和数据挖掘，有丰富的算法实战经验。',
+    achievements: ['数据达人'],
+    recentActivity: '完成了推荐系统优化',
+    matchScore: 72,
+    status: 'offline',
+    lastSeen: '昨天'
   }
-}
+]
+
+// Tab类型
+type TabType = 'members' | 'coaches' | 'online'
 
 export default function MembersPage() {
-  const router = useRouter()
-  const [members, setMembers] = useState<Member[]>([])
-  const [loading, setLoading] = useState(true)
-  const [searchTerm, setSearchTerm] = useState("")
-  const [filterType, setFilterType] = useState("all")
-  const [selectedSkills, setSelectedSkills] = useState<string[]>([])
+  const [activeTab, setActiveTab] = useState<TabType>('members')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [selectedMember, setSelectedMember] = useState<typeof mockMembers[0] | null>(null)
+  const [showChat, setShowChat] = useState(false)
+  const [chatTarget, setChatTarget] = useState<typeof mockMembers[0] | null>(null)
 
-  // 模拟获取成员数据
-  const fetchMembers = async () => {
-    try {
-      const mockMembers: Member[] = [
-        {
-          id: "1",
-          name: "刘小排",
-          bio: "深海圈创始人，专注AI产品开发教育",
-          location: "北京",
-          skills: ["AI编程", "产品设计", "商业化"],
-          level: 10,
-          points: 9999,
-          isOnline: true,
-          createdAt: new Date("2024-01-01"),
-          role: "ADMIN",
-          _count: { posts: 156, followers: 1234, following: 89 },
-        },
-        {
-          id: "2",
-          name: "王老师",
-          bio: "资深AI开发者，10年互联网经验",
-          location: "上海",
-          skills: ["Python", "机器学习", "全栈开发"],
-          level: 8,
-          points: 5678,
-          isOnline: true,
-          createdAt: new Date("2024-01-15"),
-          role: "TEACHER",
-          _count: { posts: 89, followers: 567, following: 123 },
-        },
-        {
-          id: "3",
-          name: "张三",
-          bio: "AI编程爱好者，正在学习中",
-          location: "深圳",
-          skills: ["前端开发", "UI设计"],
-          level: 3,
-          points: 234,
-          isOnline: false,
-          createdAt: new Date("2024-11-01"),
-          role: "USER",
-          _count: { posts: 12, followers: 45, following: 78 },
-        },
-        {
-          id: "4",
-          name: "李四",
-          bio: "产品经理转型AI开发",
-          location: "杭州",
-          skills: ["产品设计", "AI编程"],
-          level: 5,
-          points: 890,
-          isOnline: true,
-          createdAt: new Date("2024-10-15"),
-          role: "USER",
-          _count: { posts: 34, followers: 123, following: 56 },
-        },
-        {
-          id: "5",
-          name: "王五",
-          bio: "全栈工程师，喜欢探索新技术",
-          location: "成都",
-          skills: ["Next.js", "Python", "全栈开发"],
-          level: 6,
-          points: 1234,
-          isOnline: false,
-          createdAt: new Date("2024-09-01"),
-          role: "USER",
-          _count: { posts: 56, followers: 234, following: 89 },
-        },
-      ]
-      setMembers(mockMembers)
-    } catch (error) {
-      console.error("获取成员失败:", error)
-    } finally {
-      setLoading(false)
+  // 根据Tab过滤成员
+  const filteredMembers = useMemo(() => {
+    let filtered = mockMembers
+
+    // Tab过滤
+    if (activeTab === 'coaches') {
+      filtered = filtered.filter(member => member.isCoach)
+    } else if (activeTab === 'online') {
+      filtered = filtered.filter(member => member.status === 'online')
     }
-  }
 
-  useEffect(() => {
-    fetchMembers()
-  }, [])
-
-  // 获取所有技能标签
-  const allSkills = Array.from(
-    new Set(members.flatMap(member => member.skills))
-  )
-
-  // 过滤成员
-  const filteredMembers = members.filter(member => {
-    const matchSearch = member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                       member.bio.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                       (member.location?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false)
-    
-    const matchFilter = filterType === "all" ||
-                       (filterType === "online" && member.isOnline) ||
-                       (filterType === "new" && new Date().getTime() - member.createdAt.getTime() < 7 * 24 * 60 * 60 * 1000) ||
-                       (filterType === "teacher" && ["ADMIN", "TEACHER"].includes(member.role))
-    
-    const matchSkills = selectedSkills.length === 0 ||
-                       selectedSkills.some(skill => member.skills.includes(skill))
-    
-    return matchSearch && matchFilter && matchSkills
-  })
-
-  // 获取等级标签
-  const getLevelBadge = (level: number) => {
-    if (level >= 9) return { label: "大师", color: "bg-purple-500" }
-    if (level >= 7) return { label: "专家", color: "bg-blue-500" }
-    if (level >= 5) return { label: "进阶", color: "bg-green-500" }
-    if (level >= 3) return { label: "入门", color: "bg-yellow-500" }
-    return { label: "新手", color: "bg-gray-500" }
-  }
-
-  // 获取角色标签
-  const getRoleBadge = (role: string) => {
-    switch (role) {
-      case "ADMIN":
-        return <Badge variant="destructive">创始人</Badge>
-      case "TEACHER":
-        return <Badge variant="default">导师</Badge>
-      case "ASSISTANT":
-        return <Badge variant="secondary">助教</Badge>
-      default:
-        return null
+    // 搜索过滤
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase()
+      filtered = filtered.filter(member => 
+        member.name.toLowerCase().includes(query) ||
+        member.role.toLowerCase().includes(query) ||
+        member.title.toLowerCase().includes(query) ||
+        member.bio.toLowerCase().includes(query)
+      )
     }
+
+    return filtered
+  }, [activeTab, searchQuery])
+
+  // 获取Tab统计
+  const tabStats = useMemo(() => ({
+    members: mockMembers.length,
+    coaches: mockMembers.filter(m => m.isCoach).length,
+    online: mockMembers.filter(m => m.status === 'online').length
+  }), [])
+
+  // 获取状态指示器
+  const getStatusIndicator = (status: string) => {
+    const indicators = {
+      online: { color: 'bg-green-500', text: '在线' },
+      busy: { color: 'bg-yellow-500', text: '忙碌' },
+      offline: { color: 'bg-gray-400', text: '离线' }
+    }
+    return indicators[status as keyof typeof indicators] || indicators.offline
   }
 
-  if (loading) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-center">加载中...</div>
-      </div>
-    )
+  // 开始聊天
+  const startChat = (member: typeof mockMembers[0]) => {
+    setChatTarget(member)
+    setShowChat(true)
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-4">通讯录</h1>
-        <p className="text-muted-foreground">
-          连接深海圈的每一位成员，找到志同道合的伙伴
-        </p>
-      </div>
-
-      {/* 搜索和筛选栏 */}
-      <div className="space-y-4 mb-8">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-          <Input
-            placeholder="搜索成员姓名、简介或地区..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
+    <div className="min-h-screen bg-gray-50 pt-16">
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        {/* 页面标题 */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">社区成员</h1>
+          <p className="text-gray-600">连接全球优秀的AI产品开发者</p>
         </div>
 
-        <div className="flex gap-2 flex-wrap">
-          <Button
-            variant={filterType === "all" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setFilterType("all")}
-          >
-            全部成员
-          </Button>
-          <Button
-            variant={filterType === "online" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setFilterType("online")}
-          >
-            <Circle className="w-3 h-3 mr-1 fill-green-500 text-green-500" />
-            在线成员
-          </Button>
-          <Button
-            variant={filterType === "new" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setFilterType("new")}
-          >
-            新成员
-          </Button>
-          <Button
-            variant={filterType === "teacher" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setFilterType("teacher")}
-          >
-            导师/助教
-          </Button>
-        </div>
-
-        <div className="flex gap-2 flex-wrap">
-          <span className="text-sm text-muted-foreground">技能筛选：</span>
-          {allSkills.map(skill => (
-            <Badge
-              key={skill}
-              variant={selectedSkills.includes(skill) ? "default" : "outline"}
-              className="cursor-pointer"
-              onClick={() => {
-                if (selectedSkills.includes(skill)) {
-                  setSelectedSkills(selectedSkills.filter(s => s !== skill))
-                } else {
-                  setSelectedSkills([...selectedSkills, skill])
-                }
-              }}
-            >
-              {skill}
-            </Badge>
-          ))}
-        </div>
-      </div>
-
-      {/* 成员统计 */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-2xl font-bold">{members.length}</div>
-            <div className="text-sm text-muted-foreground">总成员数</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-2xl font-bold">
-              {members.filter(m => m.isOnline).length}
-            </div>
-            <div className="text-sm text-muted-foreground">在线成员</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-2xl font-bold">
-              {members.filter(m => new Date().getTime() - m.createdAt.getTime() < 7 * 24 * 60 * 60 * 1000).length}
-            </div>
-            <div className="text-sm text-muted-foreground">本周新增</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-2xl font-bold">
-              {members.filter(m => ["ADMIN", "TEACHER"].includes(m.role)).length}
-            </div>
-            <div className="text-sm text-muted-foreground">导师团队</div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* 成员列表 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredMembers.length === 0 ? (
-          <div className="col-span-full text-center py-8 text-muted-foreground">
-            没有找到符合条件的成员
-          </div>
-        ) : (
-          filteredMembers.map(member => {
-            const levelInfo = getLevelBadge(member.level)
-            
-            return (
-              <Card 
-                key={member.id}
-                className="cursor-pointer hover:shadow-md transition-shadow"
-                onClick={() => router.push(`/members/${member.id}`)}
+        {/* Tab切换 */}
+        <div className="bg-white rounded-lg shadow-sm mb-6">
+          <div className="border-b border-gray-200">
+            <div className="flex">
+              <button
+                onClick={() => setActiveTab('members')}
+                className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
+                  activeTab === 'members'
+                    ? 'text-[#0891A1] border-[#0891A1]'
+                    : 'text-gray-500 border-transparent hover:text-gray-700'
+                }`}
               >
-                <CardHeader>
+                <div className="flex items-center gap-2">
+                  <Users className="w-4 h-4" />
+                  <span>会员</span>
+                  <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-xs">
+                    {tabStats.members}
+                  </span>
+                </div>
+              </button>
+              <button
+                onClick={() => setActiveTab('coaches')}
+                className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
+                  activeTab === 'coaches'
+                    ? 'text-[#0891A1] border-[#0891A1]'
+                    : 'text-gray-500 border-transparent hover:text-gray-700'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <GraduationCap className="w-4 h-4" />
+                  <span>教练</span>
+                  <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-xs">
+                    {tabStats.coaches}
+                  </span>
+                </div>
+              </button>
+              <button
+                onClick={() => setActiveTab('online')}
+                className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
+                  activeTab === 'online'
+                    ? 'text-[#0891A1] border-[#0891A1]'
+                    : 'text-gray-500 border-transparent hover:text-gray-700'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <div className="relative">
+                    <span className="absolute w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                    <span className="absolute w-2 h-2 bg-green-500 rounded-full" />
+                  </div>
+                  <span className="ml-3">在线</span>
+                  <span className="bg-green-100 text-green-600 px-2 py-0.5 rounded-full text-xs">
+                    {tabStats.online}
+                  </span>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          {/* 搜索栏 */}
+          <div className="p-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <input
+                type="text"
+                placeholder="搜索成员..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0891A1] focus:border-transparent"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* 成员列表 */}
+        <div className="space-y-4">
+          {filteredMembers.map((member, index) => (
+            <motion.div
+              key={member.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.05 }}
+              className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow"
+            >
+              <div className="flex items-start gap-4">
+                {/* 头像 */}
+                <div className="relative">
+                  <img
+                    src={member.avatar}
+                    alt={member.name}
+                    className="w-16 h-16 rounded-full object-cover cursor-pointer hover:opacity-80 transition-opacity"
+                    onClick={() => setSelectedMember(member)}
+                    onError={(e) => {
+                      e.currentTarget.src = '/default-avatar.svg'
+                    }}
+                  />
+                  {/* 状态指示器 */}
+                  <div className={`absolute bottom-0 right-0 w-4 h-4 ${getStatusIndicator(member.status).color} rounded-full border-2 border-white`} />
+                </div>
+
+                {/* 用户信息 */}
+                <div className="flex-1">
                   <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="relative">
-                        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-lg font-semibold">
-                          {member.name[0]}
-                        </div>
-                        {member.isOnline && (
-                          <Circle className="absolute bottom-0 right-0 w-3 h-3 fill-green-500 text-green-500" />
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h3 
+                          className="text-lg font-semibold text-gray-900 cursor-pointer hover:underline"
+                          onClick={() => setSelectedMember(member)}
+                        >
+                          {member.name}
+                        </h3>
+                        {member.verified && (
+                          <CheckCircle className="w-5 h-5 text-blue-500" />
+                        )}
+                        {member.isCoach && (
+                          <span className="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full font-medium">
+                            教练
+                          </span>
                         )}
                       </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-semibold">{member.name}</h3>
-                          {getRoleBadge(member.role)}
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          {member.location && (
-                            <>
-                              <MapPin className="w-3 h-3" />
-                              {member.location}
-                            </>
-                          )}
-                          <Clock className="w-3 h-3" />
-                          {formatDistanceToNow(member.createdAt, {
-                            addSuffix: true,
-                            locale: zhCN,
-                          })}
-                        </div>
-                      </div>
+                      <p className="text-sm text-gray-600">{member.role}</p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        加入于 {member.joinDate} · {member.lastSeen}
+                      </p>
                     </div>
-                    <Badge className={`${levelInfo.color} text-white`}>
-                      Lv.{member.level} {levelInfo.label}
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-                    {member.bio}
-                  </p>
-                  
-                  <div className="flex flex-wrap gap-1 mb-3">
-                    {member.skills.map(skill => {
-                      const Icon = skillIcons[skill] || Code
-                      return (
-                        <Badge key={skill} variant="secondary" className="text-xs">
-                          <Icon className="w-3 h-3 mr-1" />
-                          {skill}
-                        </Badge>
-                      )
-                    })}
-                  </div>
-                  
-                  <div className="flex items-center justify-between text-sm text-muted-foreground">
-                    <div className="flex gap-3">
-                      <span>{member._count.posts} 动态</span>
-                      <span>{member._count.followers} 粉丝</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Star className="w-4 h-4 text-yellow-500" />
-                      {member.points}
+
+                    {/* 操作按钮 */}
+                    <div className="flex items-center gap-2">
+                      {activeTab === 'online' && (
+                        <button
+                          onClick={() => startChat(member)}
+                          className="px-4 py-2 bg-[#0891A1] text-white rounded-lg hover:bg-[#07788A] transition-colors flex items-center gap-2"
+                        >
+                          <MessageSquare className="w-4 h-4" />
+                          聊天
+                        </button>
+                      )}
+                      <button
+                        onClick={() => setSelectedMember(member)}
+                        className="px-4 py-2 border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                      >
+                        查看详情
+                      </button>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-            )
-          })
+
+                  {/* 简介 */}
+                  <p className="text-sm text-gray-600 mt-2 line-clamp-2">{member.bio}</p>
+
+                  {/* 技能标签 */}
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    {member.skills.slice(0, 3).map(skill => (
+                      <span
+                        key={skill}
+                        className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded"
+                      >
+                        {skill}
+                      </span>
+                    ))}
+                    {member.skills.length > 3 && (
+                      <span className="px-2 py-1 text-gray-400 text-xs">
+                        +{member.skills.length - 3}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* 统计信息 */}
+                  <div className="flex items-center gap-4 mt-3 text-sm text-gray-500">
+                    <span className="flex items-center gap-1">
+                      <Users className="w-4 h-4" />
+                      {member.followers} 关注者
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Briefcase className="w-4 h-4" />
+                      {member.projects} 项目
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Clock className="w-4 h-4" />
+                      {member.recentActivity}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* 空状态 */}
+        {filteredMembers.length === 0 && (
+          <div className="text-center py-12">
+            <Users className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+            <p className="text-gray-500">暂无符合条件的成员</p>
+          </div>
         )}
       </div>
+
+      {/* 成员详情模态框 - 使用通用组件 */}
+      {selectedMember && (
+        <MemberInfoModal
+          isOpen={!!selectedMember}
+          onClose={() => setSelectedMember(null)}
+          memberName={selectedMember.name}
+          memberData={{
+            avatar: selectedMember.avatar,
+            role: selectedMember.role,
+            title: selectedMember.title,
+            location: selectedMember.location,
+            joinDate: selectedMember.joinDate,
+            bio: selectedMember.bio,
+            skills: selectedMember.skills,
+            followers: selectedMember.followers,
+            following: selectedMember.following,
+            projects: selectedMember.projects,
+            verified: selectedMember.verified,
+            status: selectedMember.status
+          }}
+          size="large"
+        />
+      )}
+
+      {/* 聊天窗口 */}
+      <AnimatePresence>
+        {showChat && chatTarget && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className="fixed bottom-4 right-4 w-96 bg-white rounded-lg shadow-2xl z-50"
+          >
+            {/* 聊天头部 */}
+            <div className="flex items-center justify-between p-4 border-b">
+              <div className="flex items-center gap-3">
+                <img
+                  src={chatTarget.avatar}
+                  alt={chatTarget.name}
+                  className="w-10 h-10 rounded-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.src = '/default-avatar.svg'
+                  }}
+                />
+                <div>
+                  <h3 className="font-semibold text-gray-900">{chatTarget.name}</h3>
+                  <p className="text-xs text-gray-500">{getStatusIndicator(chatTarget.status).text}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowChat(false)}
+                className="p-1 hover:bg-gray-100 rounded"
+              >
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+
+            {/* 聊天内容区 */}
+            <div className="h-96 p-4 overflow-y-auto bg-gray-50">
+              <div className="text-center text-sm text-gray-500 mb-4">
+                与 {chatTarget.name} 开始对话
+              </div>
+              {/* 这里可以添加聊天消息 */}
+            </div>
+
+            {/* 输入区域 */}
+            <div className="p-4 border-t">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="输入消息..."
+                  className="flex-1 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0891A1] focus:border-transparent"
+                />
+                <button className="p-2 bg-[#0891A1] text-white rounded-lg hover:bg-[#07788A] transition-colors">
+                  <Send className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useParams, useRouter } from "next/navigation"
+import { useState, useEffect, use } from "react"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -19,8 +19,8 @@ const categoryConfig: Record<ArticleCategory, { label: string; color: string }> 
   OVERSEAS_EXP: { label: "出海经验", color: "bg-pink-500" },
 }
 
-export default function ArticleDetailPage() {
-  const params = useParams()
+export default function ArticleDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params)
   const router = useRouter()
   const [article, setArticle] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -29,7 +29,7 @@ export default function ArticleDetailPage() {
   // 获取文章详情
   const fetchArticle = async () => {
     try {
-      const response = await fetch(`/api/articles/${params.id}`)
+      const response = await fetch(`/api/articles/${id}`)
       
       if (!response.ok) {
         throw new Error("获取文章失败")
@@ -63,7 +63,7 @@ export default function ArticleDetailPage() {
       if (response.ok) {
         const data = await response.json()
         // 过滤掉当前文章
-        const filtered = data.articles.filter((a: any) => a.id !== params.id)
+        const filtered = data.articles.filter((a: any) => a.id !== id)
         setRelatedArticles(filtered.slice(0, 4))
       }
     } catch (error) {
@@ -73,7 +73,7 @@ export default function ArticleDetailPage() {
 
   useEffect(() => {
     fetchArticle()
-  }, [params.id])
+  }, [id])
 
   if (loading) {
     return (

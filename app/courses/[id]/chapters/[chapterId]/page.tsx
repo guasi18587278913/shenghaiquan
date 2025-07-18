@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, use } from "react"
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -15,8 +15,9 @@ import { MarkdownViewer } from "@/components/markdown-viewer"
 export default function ChapterPage({ 
   params 
 }: { 
-  params: { id: string; chapterId: string } 
+  params: Promise<{ id: string; chapterId: string }> 
 }) {
+  const { id, chapterId } = use(params)
   const { data: session } = useSession()
   const router = useRouter()
   const [chapter, setChapter] = useState<any>(null)
@@ -30,22 +31,22 @@ export default function ChapterPage({
   const fetchChapter = async () => {
     try {
       // 获取课程信息
-      const courseResponse = await fetch(`/api/courses/${params.id}`)
+      const courseResponse = await fetch(`/api/courses/${id}`)
       if (courseResponse.ok) {
         const courseData = await courseResponse.json()
         setCourse(courseData)
         
         // 查找当前章节
-        const currentChapter = courseData.chapters.find((ch: any) => ch.id === params.chapterId)
+        const currentChapter = courseData.chapters.find((ch: any) => ch.id === chapterId)
         if (currentChapter) {
           setChapter(currentChapter)
         } else {
-          router.push(`/courses/${params.id}`)
+          router.push(`/courses/${id}`)
         }
       }
 
       // 获取章节进度
-      const progressResponse = await fetch(`/api/chapters/${params.chapterId}/progress`)
+      const progressResponse = await fetch(`/api/chapters/${chapterId}/progress`)
       if (progressResponse.ok) {
         const progressData = await progressResponse.json()
         setProgress(progressData.progress)
@@ -61,7 +62,7 @@ export default function ChapterPage({
   // 更新学习进度
   const updateProgress = async (data: any) => {
     try {
-      await fetch(`/api/chapters/${params.chapterId}/progress`, {
+      await fetch(`/api/chapters/${chapterId}/progress`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
@@ -81,12 +82,12 @@ export default function ChapterPage({
     alert("恭喜完成本章学习！")
     
     // 跳转到下一章或返回课程页
-    const currentIndex = course.chapters.findIndex((ch: any) => ch.id === params.chapterId)
+    const currentIndex = course.chapters.findIndex((ch: any) => ch.id === chapterId)
     if (currentIndex < course.chapters.length - 1) {
       const nextChapter = course.chapters[currentIndex + 1]
-      router.push(`/courses/${params.id}/chapters/${nextChapter.id}`)
+      router.push(`/courses/${id}/chapters/${nextChapter.id}`)
     } else {
-      router.push(`/courses/${params.id}`)
+      router.push(`/courses/${id}`)
     }
   }
 
@@ -94,7 +95,7 @@ export default function ChapterPage({
     if (session) {
       fetchChapter()
     }
-  }, [params.chapterId, session])
+  }, [chapterId, session])
 
   // 记录学习时长
   useEffect(() => {
@@ -143,7 +144,7 @@ export default function ChapterPage({
         <Button 
           variant="ghost" 
           className="mb-4"
-          onClick={() => router.push(`/courses/${params.id}`)}
+          onClick={() => router.push(`/courses/${id}`)}
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           返回课程
@@ -205,7 +206,7 @@ export default function ChapterPage({
               {course && (
                 <>
                   {(() => {
-                    const currentIndex = course.chapters.findIndex((ch: any) => ch.id === params.chapterId)
+                    const currentIndex = course.chapters.findIndex((ch: any) => ch.id === chapterId)
                     const prevChapter = currentIndex > 0 ? course.chapters[currentIndex - 1] : null
                     const nextChapter = currentIndex < course.chapters.length - 1 ? course.chapters[currentIndex + 1] : null
                     
@@ -213,7 +214,7 @@ export default function ChapterPage({
                       <>
                         <Button 
                           variant="outline" 
-                          onClick={() => prevChapter && router.push(`/courses/${params.id}/chapters/${prevChapter.id}`)}
+                          onClick={() => prevChapter && router.push(`/courses/${id}/chapters/${prevChapter.id}`)}
                           disabled={!prevChapter}
                         >
                           上一章
@@ -238,7 +239,7 @@ export default function ChapterPage({
                         
                         <Button 
                           variant="outline"
-                          onClick={() => nextChapter && router.push(`/courses/${params.id}/chapters/${nextChapter.id}`)}
+                          onClick={() => nextChapter && router.push(`/courses/${id}/chapters/${nextChapter.id}`)}
                           disabled={!nextChapter}
                         >
                           下一章

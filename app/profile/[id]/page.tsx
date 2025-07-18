@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, use } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -36,18 +36,19 @@ interface UserProfile {
   }
 }
 
-export default function UserProfilePage({ params }: { params: { id: string } }) {
+export default function UserProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter()
+  const { id } = use(params)
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState<UserProfile | null>(null)
 
   useEffect(() => {
     fetchUserProfile()
-  }, [params.id])
+  }, [id])
 
   const fetchUserProfile = async () => {
     try {
-      const response = await fetch(`/api/users/${params.id}`)
+      const response = await fetch(`/api/users/${id}`)
       if (response.ok) {
         const data = await response.json()
         setUser(data)

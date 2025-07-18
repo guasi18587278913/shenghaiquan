@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, use } from "react"
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -29,9 +29,10 @@ const unlockTypeLabels: Record<UnlockType, string> = {
   PAID: "付费解锁",
 }
 
-export default function CourseDetailPage({ params }: { params: { id: string } }) {
+export default function CourseDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { data: session } = useSession()
   const router = useRouter()
+  const { id } = use(params)
   const [course, setCourse] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [progress, setProgress] = useState<any>(null)
@@ -39,7 +40,7 @@ export default function CourseDetailPage({ params }: { params: { id: string } })
   // 获取课程详情
   const fetchCourse = async () => {
     try {
-      const response = await fetch(`/api/courses/${params.id}`)
+      const response = await fetch(`/api/courses/${id}`)
       if (response.ok) {
         const data = await response.json()
         setCourse(data)
@@ -59,7 +60,7 @@ export default function CourseDetailPage({ params }: { params: { id: string } })
     if (!session) return
     
     try {
-      const response = await fetch(`/api/courses/${params.id}/progress`)
+      const response = await fetch(`/api/courses/${id}/progress`)
       if (response.ok) {
         const data = await response.json()
         setProgress(data)
@@ -71,7 +72,7 @@ export default function CourseDetailPage({ params }: { params: { id: string } })
 
   useEffect(() => {
     fetchCourse()
-  }, [params.id])
+  }, [id])
 
   useEffect(() => {
     if (course?.isEnrolled && session) {
@@ -87,7 +88,7 @@ export default function CourseDetailPage({ params }: { params: { id: string } })
     }
 
     try {
-      const response = await fetch(`/api/courses/${params.id}/enroll`, {
+      const response = await fetch(`/api/courses/${id}/enroll`, {
         method: "POST",
       })
 
@@ -115,7 +116,7 @@ export default function CourseDetailPage({ params }: { params: { id: string } })
       return
     }
 
-    router.push(`/courses/${params.id}/chapters/${chapterId}`)
+    router.push(`/courses/${id}/chapters/${chapterId}`)
   }
 
   // 获取下一个未完成的章节
@@ -302,14 +303,14 @@ export default function CourseDetailPage({ params }: { params: { id: string } })
                     onClick={() => {
                       const nextChapter = getNextChapter()
                       if (nextChapter) {
-                        router.push(`/courses/${params.id}/chapters/${nextChapter.id}`)
+                        router.push(`/courses/${id}/chapters/${nextChapter.id}`)
                       } else if (progress?.progress.percentage === 100) {
                         alert("恭喜！您已完成全部课程")
                       } else {
                         // 从第一章开始
                         const firstChapter = course.chapters.find((ch: any) => ch.isUnlocked)
                         if (firstChapter) {
-                          router.push(`/courses/${params.id}/chapters/${firstChapter.id}`)
+                          router.push(`/courses/${id}/chapters/${firstChapter.id}`)
                         }
                       }
                     }}
