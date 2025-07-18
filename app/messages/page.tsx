@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -50,7 +50,7 @@ interface Message {
   }
 }
 
-export default function MessagesPage() {
+function MessagesContent() {
   const { data: session } = useSession()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -356,5 +356,17 @@ export default function MessagesPage() {
         </Card>
       </div>
     </div>
+  )
+}
+
+export default function MessagesPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 pt-16 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-[#0891A1]" />
+      </div>
+    }>
+      <MessagesContent />
+    </Suspense>
   )
 }
