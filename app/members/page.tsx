@@ -1,264 +1,158 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { MemberInfoModal } from '@/components/member-info-modal'
+import { useSearchParams } from 'next/navigation'
 import { 
   Search, 
-  Filter, 
   MapPin, 
   Briefcase, 
   Star, 
-  Mail, 
-  MessageCircle,
-  Calendar,
-  TrendingUp,
-  Award,
-  Users,
-  Eye,
-  UserPlus,
-  ChevronDown,
-  X,
-  Sparkles,
-  Zap,
-  Heart,
-  Share2,
-  Globe,
-  Github,
-  Linkedin,
-  Twitter,
-  Clock,
-  BarChart3,
-  Target,
-  Rocket,
-  Code,
-  Palette,
-  Megaphone,
-  Cpu,
-  Shield,
-  Waves,
-  Map,
   MessageSquare,
-  Send,
+  Clock,
+  Users,
   GraduationCap,
-  CheckCircle
+  CheckCircle,
+  X,
+  Send,
+  Loader2,
+  AlertCircle
 } from 'lucide-react'
-
-// 技能图标映射
-const skillIcons: { [key: string]: any } = {
-  'AI开发': Cpu,
-  '产品设计': Palette,
-  '全栈开发': Code,
-  '市场营销': Megaphone,
-  '数据分析': BarChart3,
-  '安全专家': Shield,
-  'UI/UX': Target,
-  '项目管理': Briefcase
-}
-
-// 模拟成员数据
-const mockMembers = [
-  {
-    id: 1,
-    name: '刘小排',
-    avatar: '/avatars/刘小排.jpg',
-    role: '深海圈创始人',
-    title: 'AI产品专家',
-    location: '上海',
-    joinTime: '2023-01',
-    joinDate: '2023年1月6日',
-    level: 'expert',
-    verified: true,
-    isCoach: true,
-    skills: ['AI开发', '产品设计', '全栈开发'],
-    projects: 12,
-    followers: 3456,
-    following: 234,
-    bio: '专注于AI产品开发和出海业务，帮助开发者实现技术变现。深海圈创始人，多年海外产品经验。',
-    achievements: ['金牌导师', '千粉达人', '优质创作者'],
-    recentActivity: '刚刚发布了新的AI产品开发教程',
-    matchScore: 95,
-    status: 'online',
-    lastSeen: '现在在线',
-    socialLinks: {
-      github: 'liuxiaopai',
-      twitter: 'liuxiaopai',
-      linkedin: 'liuxiaopai'
-    }
-  },
-  {
-    id: 2,
-    name: '张三',
-    avatar: '/avatars/user2.jpg',
-    role: 'AI工程师',
-    title: '深度学习专家',
-    location: '北京',
-    joinTime: '2023-03',
-    joinDate: '2023年3月15日',
-    level: 'senior',
-    verified: true,
-    isCoach: false,
-    skills: ['AI开发', '数据分析', 'Python'],
-    projects: 8,
-    followers: 1234,
-    following: 156,
-    bio: '专注于深度学习和计算机视觉，在AI领域有5年以上经验。',
-    achievements: ['技术达人', '活跃贡献者'],
-    recentActivity: '完成了图像识别项目',
-    matchScore: 88,
-    status: 'online',
-    lastSeen: '现在在线'
-  },
-  {
-    id: 3,
-    name: 'Emily Chen',
-    avatar: '/avatars/user3.jpg',
-    role: '产品经理',
-    title: '海外产品专家',
-    location: '旧金山',
-    joinTime: '2023-02',
-    joinDate: '2023年2月8日',
-    level: 'expert',
-    verified: true,
-    isCoach: true,
-    skills: ['产品设计', '市场营销', '数据分析'],
-    projects: 10,
-    followers: 4567,
-    following: 345,
-    bio: '硅谷产品经理，专注于AI SaaS产品的全球化战略。',
-    achievements: ['金牌导师', '海外专家', '千粉达人'],
-    recentActivity: '分享了出海产品方法论',
-    matchScore: 96,
-    status: 'busy',
-    lastSeen: '5分钟前'
-  },
-  {
-    id: 4,
-    name: '李四',
-    avatar: '/avatars/user4.jpg',
-    role: '全栈开发',
-    title: 'React专家',
-    location: '深圳',
-    joinTime: '2023-05',
-    joinDate: '2023年5月20日',
-    level: 'intermediate',
-    verified: false,
-    isCoach: false,
-    skills: ['全栈开发', 'React', 'Node.js'],
-    projects: 6,
-    followers: 876,
-    following: 234,
-    bio: '热爱开源，专注于React生态系统和现代前端开发。',
-    achievements: ['开源贡献者'],
-    recentActivity: '参与了开源项目',
-    matchScore: 76,
-    status: 'offline',
-    lastSeen: '2小时前'
-  },
-  {
-    id: 5,
-    name: '王五',
-    avatar: '/avatars/user5.jpg',
-    role: 'UI/UX设计师',
-    title: '交互设计专家',
-    location: '杭州',
-    joinTime: '2023-06',
-    joinDate: '2023年6月10日',
-    level: 'senior',
-    verified: true,
-    isCoach: true,
-    skills: ['UI/UX', '产品设计', 'Figma'],
-    projects: 15,
-    followers: 2341,
-    following: 432,
-    bio: '10年设计经验，专注于AI产品的用户体验设计。',
-    achievements: ['设计大师', '优质创作者'],
-    recentActivity: '发布了新的设计系统',
-    matchScore: 92,
-    status: 'online',
-    lastSeen: '现在在线'
-  },
-  {
-    id: 6,
-    name: '赵六',
-    avatar: '/avatars/user6.jpg',
-    role: '数据科学家',
-    title: 'ML工程师',
-    location: '成都',
-    joinTime: '2023-07',
-    joinDate: '2023年7月1日',
-    level: 'intermediate',
-    verified: false,
-    isCoach: false,
-    skills: ['数据分析', 'AI开发', 'Python'],
-    projects: 5,
-    followers: 567,
-    following: 123,
-    bio: '专注于机器学习和数据挖掘，有丰富的算法实战经验。',
-    achievements: ['数据达人'],
-    recentActivity: '完成了推荐系统优化',
-    matchScore: 72,
-    status: 'offline',
-    lastSeen: '昨天'
-  }
-]
 
 // Tab类型
 type TabType = 'members' | 'coaches' | 'online'
 
+// 用户类型
+interface User {
+  id: number
+  name: string
+  avatar: string | null
+  location: string
+  company: string
+  position: string
+  bio: string | null
+  skills: string[]
+  online: boolean
+  level: number
+  points: number
+  role: string
+  createdAt: string
+}
+
 export default function MembersPage() {
+  const searchParams = useSearchParams()
+  const cityFromUrl = searchParams.get('city')
+  
   const [activeTab, setActiveTab] = useState<TabType>('members')
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedMember, setSelectedMember] = useState<typeof mockMembers[0] | null>(null)
+  const [cityFilter, setCityFilter] = useState(cityFromUrl || '')
+  const [users, setUsers] = useState<User[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [selectedMember, setSelectedMember] = useState<User | null>(null)
   const [showChat, setShowChat] = useState(false)
-  const [chatTarget, setChatTarget] = useState<typeof mockMembers[0] | null>(null)
+  const [chatTarget, setChatTarget] = useState<User | null>(null)
+  const [page, setPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [total, setTotal] = useState(0)
 
-  // 根据Tab过滤成员
-  const filteredMembers = useMemo(() => {
-    let filtered = mockMembers
+  // 获取用户数据
+  useEffect(() => {
+    fetchUsers()
+  }, [page, searchQuery, activeTab, cityFilter])
+
+  const fetchUsers = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+
+      const params = new URLSearchParams({
+        page: page.toString(),
+        pageSize: '20',
+        search: searchQuery
+      })
+
+      if (activeTab === 'online') {
+        params.append('online', 'true')
+      }
+      
+      if (cityFilter) {
+        params.append('city', cityFilter)
+      }
+
+      const response = await fetch(`/api/users?${params}`)
+      if (!response.ok) {
+        throw new Error('获取用户列表失败')
+      }
+
+      const data = await response.json()
+      setUsers(data.users)
+      setTotal(data.total)
+      setTotalPages(data.totalPages)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '获取用户列表失败')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // 根据Tab过滤用户
+  const filteredUsers = useMemo(() => {
+    let filtered = users
 
     // Tab过滤
     if (activeTab === 'coaches') {
-      filtered = filtered.filter(member => member.isCoach)
-    } else if (activeTab === 'online') {
-      filtered = filtered.filter(member => member.status === 'online')
-    }
-
-    // 搜索过滤
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase()
-      filtered = filtered.filter(member => 
-        member.name.toLowerCase().includes(query) ||
-        member.role.toLowerCase().includes(query) ||
-        member.title.toLowerCase().includes(query) ||
-        member.bio.toLowerCase().includes(query)
+      filtered = filtered.filter(user => 
+        user.role === 'ADMIN' || user.role === 'ASSISTANT'
       )
     }
 
     return filtered
-  }, [activeTab, searchQuery])
+  }, [users, activeTab])
 
   // 获取Tab统计
-  const tabStats = useMemo(() => ({
-    members: mockMembers.length,
-    coaches: mockMembers.filter(m => m.isCoach).length,
-    online: mockMembers.filter(m => m.status === 'online').length
-  }), [])
+  const tabStats = useMemo(() => {
+    const onlineCount = users.filter(u => u.online).length
+    const coachCount = users.filter(u => 
+      u.role === 'ADMIN' || u.role === 'ASSISTANT'
+    ).length
+
+    return {
+      members: total,
+      coaches: activeTab === 'coaches' ? coachCount : users.filter(u => 
+        u.role === 'ADMIN' || u.role === 'ASSISTANT'
+      ).length,
+      online: activeTab === 'online' ? onlineCount : users.filter(u => u.online).length
+    }
+  }, [users, total, activeTab])
 
   // 获取状态指示器
-  const getStatusIndicator = (status: string) => {
-    const indicators = {
-      online: { color: 'bg-green-500', text: '在线' },
-      busy: { color: 'bg-yellow-500', text: '忙碌' },
-      offline: { color: 'bg-gray-400', text: '离线' }
-    }
-    return indicators[status as keyof typeof indicators] || indicators.offline
+  const getStatusIndicator = (online: boolean) => {
+    return online 
+      ? { color: 'bg-green-500', text: '在线' }
+      : { color: 'bg-gray-400', text: '离线' }
   }
 
   // 开始聊天
-  const startChat = (member: typeof mockMembers[0]) => {
+  const startChat = (member: User) => {
     setChatTarget(member)
     setShowChat(true)
+  }
+
+  // 格式化加入时间
+  const formatJoinDate = (dateStr: string) => {
+    const date = new Date(dateStr)
+    return date.toLocaleDateString('zh-CN', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    })
+  }
+
+  // 格式化最后在线时间
+  const formatLastSeen = (online: boolean) => {
+    return online ? '现在在线' : '离线'
   }
 
   return (
@@ -340,150 +234,218 @@ export default function MembersPage() {
                 className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0891A1] focus:border-transparent"
               />
             </div>
+            
+            {/* 城市筛选标签 */}
+            {cityFilter && (
+              <div className="mt-3 flex items-center gap-2">
+                <span className="text-sm text-gray-600">筛选城市:</span>
+                <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#0891A1]/10 text-[#0891A1] rounded-full">
+                  <MapPin className="w-4 h-4" />
+                  <span className="font-medium">{cityFilter}</span>
+                  <button
+                    onClick={() => {
+                      setCityFilter('')
+                      window.history.pushState({}, '', '/members')
+                    }}
+                    className="hover:bg-[#0891A1]/20 rounded-full p-0.5"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* 成员列表 */}
-        <div className="space-y-4">
-          {filteredMembers.map((member, index) => (
-            <motion.div
-              key={member.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.05 }}
-              className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow"
-            >
-              <div className="flex items-start gap-4">
-                {/* 头像 */}
-                <div className="relative">
-                  <img
-                    src={member.avatar}
-                    alt={member.name}
-                    className="w-16 h-16 rounded-full object-cover cursor-pointer hover:opacity-80 transition-opacity"
-                    onClick={() => setSelectedMember(member)}
-                    onError={(e) => {
-                      e.currentTarget.src = '/default-avatar.svg'
-                    }}
-                  />
-                  {/* 状态指示器 */}
-                  <div className={`absolute bottom-0 right-0 w-4 h-4 ${getStatusIndicator(member.status).color} rounded-full border-2 border-white`} />
-                </div>
+        {/* 加载状态 */}
+        {loading && (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="w-8 h-8 text-[#0891A1] animate-spin" />
+          </div>
+        )}
 
-                {/* 用户信息 */}
-                <div className="flex-1">
-                  <div className="flex items-start justify-between">
-                    <div>
+        {/* 错误状态 */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <div className="flex items-center gap-2 text-red-800">
+              <AlertCircle className="w-5 h-5" />
+              <p>{error}</p>
+            </div>
+          </div>
+        )}
+
+        {/* 成员列表 */}
+        {!loading && !error && (
+          <div className="space-y-4">
+            {filteredUsers.map((member, index) => (
+              <motion.div
+                key={member.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.05 }}
+                className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow"
+              >
+                <div className="flex items-start gap-4">
+                  {/* 头像 */}
+                  <div className="relative">
+                    <img
+                      src={member.avatar || '/default-avatar.svg'}
+                      alt={member.name}
+                      className="w-16 h-16 rounded-full object-cover cursor-pointer hover:opacity-80 transition-opacity"
+                      onClick={() => setSelectedMember(member)}
+                      onError={(e) => {
+                        e.currentTarget.src = '/default-avatar.svg'
+                      }}
+                    />
+                    {/* 状态指示器 */}
+                    <div className={`absolute bottom-0 right-0 w-4 h-4 ${getStatusIndicator(member.online).color} rounded-full border-2 border-white`} />
+                  </div>
+
+                  {/* 用户信息 */}
+                  <div className="flex-1">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h3 
+                            className="text-lg font-semibold text-gray-900 cursor-pointer hover:underline"
+                            onClick={() => setSelectedMember(member)}
+                          >
+                            {member.name}
+                          </h3>
+                          {member.level >= 5 && (
+                            <CheckCircle className="w-5 h-5 text-blue-500" />
+                          )}
+                          {(member.role === 'ADMIN' || member.role === 'ASSISTANT') && (
+                            <span className="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full font-medium">
+                              {member.role === 'ADMIN' ? '管理员' : '助教'}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-sm text-gray-600">
+                          {member.position || member.role} {member.company && `@ ${member.company}`}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          加入于 {formatJoinDate(member.createdAt)} · {formatLastSeen(member.online)}
+                        </p>
+                      </div>
+
+                      {/* 操作按钮 */}
                       <div className="flex items-center gap-2">
-                        <h3 
-                          className="text-lg font-semibold text-gray-900 cursor-pointer hover:underline"
-                          onClick={() => setSelectedMember(member)}
-                        >
-                          {member.name}
-                        </h3>
-                        {member.verified && (
-                          <CheckCircle className="w-5 h-5 text-blue-500" />
+                        {activeTab === 'online' && member.online && (
+                          <button
+                            onClick={() => startChat(member)}
+                            className="px-4 py-2 bg-[#0891A1] text-white rounded-lg hover:bg-[#07788A] transition-colors flex items-center gap-2"
+                          >
+                            <MessageSquare className="w-4 h-4" />
+                            聊天
+                          </button>
                         )}
-                        {member.isCoach && (
-                          <span className="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full font-medium">
-                            教练
+                        <button
+                          onClick={() => setSelectedMember(member)}
+                          className="px-4 py-2 border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                        >
+                          查看详情
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* 简介 */}
+                    {member.bio && (
+                      <p className="text-sm text-gray-600 mt-2 line-clamp-2">{member.bio}</p>
+                    )}
+
+                    {/* 技能标签 */}
+                    {member.skills.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mt-3">
+                        {member.skills.slice(0, 3).map(skill => (
+                          <span
+                            key={skill}
+                            className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded"
+                          >
+                            {skill}
+                          </span>
+                        ))}
+                        {member.skills.length > 3 && (
+                          <span className="px-2 py-1 text-gray-400 text-xs">
+                            +{member.skills.length - 3}
                           </span>
                         )}
                       </div>
-                      <p className="text-sm text-gray-600">{member.role}</p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        加入于 {member.joinDate} · {member.lastSeen}
-                      </p>
-                    </div>
-
-                    {/* 操作按钮 */}
-                    <div className="flex items-center gap-2">
-                      {activeTab === 'online' && (
-                        <button
-                          onClick={() => startChat(member)}
-                          className="px-4 py-2 bg-[#0891A1] text-white rounded-lg hover:bg-[#07788A] transition-colors flex items-center gap-2"
-                        >
-                          <MessageSquare className="w-4 h-4" />
-                          聊天
-                        </button>
-                      )}
-                      <button
-                        onClick={() => setSelectedMember(member)}
-                        className="px-4 py-2 border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                      >
-                        查看详情
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* 简介 */}
-                  <p className="text-sm text-gray-600 mt-2 line-clamp-2">{member.bio}</p>
-
-                  {/* 技能标签 */}
-                  <div className="flex flex-wrap gap-2 mt-3">
-                    {member.skills.slice(0, 3).map(skill => (
-                      <span
-                        key={skill}
-                        className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded"
-                      >
-                        {skill}
-                      </span>
-                    ))}
-                    {member.skills.length > 3 && (
-                      <span className="px-2 py-1 text-gray-400 text-xs">
-                        +{member.skills.length - 3}
-                      </span>
                     )}
-                  </div>
 
-                  {/* 统计信息 */}
-                  <div className="flex items-center gap-4 mt-3 text-sm text-gray-500">
-                    <span className="flex items-center gap-1">
-                      <Users className="w-4 h-4" />
-                      {member.followers} 关注者
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Briefcase className="w-4 h-4" />
-                      {member.projects} 项目
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-4 h-4" />
-                      {member.recentActivity}
-                    </span>
+                    {/* 统计信息 */}
+                    <div className="flex items-center gap-4 mt-3 text-sm text-gray-500">
+                      <span className="flex items-center gap-1">
+                        <MapPin className="w-4 h-4" />
+                        {member.location || '未知位置'}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Star className="w-4 h-4" />
+                        {member.points} 积分
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Briefcase className="w-4 h-4" />
+                        Lv.{member.level}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </motion.div>
-          ))}
-        </div>
+              </motion.div>
+            ))}
+          </div>
+        )}
 
         {/* 空状态 */}
-        {filteredMembers.length === 0 && (
+        {!loading && !error && filteredUsers.length === 0 && (
           <div className="text-center py-12">
             <Users className="w-12 h-12 text-gray-300 mx-auto mb-3" />
             <p className="text-gray-500">暂无符合条件的成员</p>
           </div>
         )}
+
+        {/* 分页 */}
+        {!loading && !error && totalPages > 1 && (
+          <div className="flex justify-center mt-8 gap-2">
+            <button
+              onClick={() => setPage(Math.max(1, page - 1))}
+              disabled={page === 1}
+              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              上一页
+            </button>
+            <span className="px-4 py-2 text-gray-600">
+              第 {page} / {totalPages} 页
+            </span>
+            <button
+              onClick={() => setPage(Math.min(totalPages, page + 1))}
+              disabled={page === totalPages}
+              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              下一页
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* 成员详情模态框 - 使用通用组件 */}
+      {/* 成员详情模态框 */}
       {selectedMember && (
         <MemberInfoModal
           isOpen={!!selectedMember}
           onClose={() => setSelectedMember(null)}
           memberName={selectedMember.name}
           memberData={{
-            avatar: selectedMember.avatar,
-            role: selectedMember.role,
-            title: selectedMember.title,
-            location: selectedMember.location,
-            joinDate: selectedMember.joinDate,
-            bio: selectedMember.bio,
+            avatar: selectedMember.avatar || '/default-avatar.svg',
+            role: selectedMember.position || selectedMember.role,
+            title: selectedMember.company || '深海圈成员',
+            location: selectedMember.location || '未知位置',
+            joinDate: formatJoinDate(selectedMember.createdAt),
+            bio: selectedMember.bio || '这个人很神秘，什么都没有留下。',
             skills: selectedMember.skills,
-            followers: selectedMember.followers,
-            following: selectedMember.following,
-            projects: selectedMember.projects,
-            verified: selectedMember.verified,
-            status: selectedMember.status as 'online' | 'busy' | 'offline'
+            followers: 0,
+            following: 0,
+            projects: 0,
+            verified: selectedMember.level >= 5,
+            status: selectedMember.online ? 'online' : 'offline'
           }}
           size="large"
         />
@@ -502,7 +464,7 @@ export default function MembersPage() {
             <div className="flex items-center justify-between p-4 border-b">
               <div className="flex items-center gap-3">
                 <img
-                  src={chatTarget.avatar}
+                  src={chatTarget.avatar || '/default-avatar.svg'}
                   alt={chatTarget.name}
                   className="w-10 h-10 rounded-full object-cover"
                   onError={(e) => {
@@ -511,7 +473,7 @@ export default function MembersPage() {
                 />
                 <div>
                   <h3 className="font-semibold text-gray-900">{chatTarget.name}</h3>
-                  <p className="text-xs text-gray-500">{getStatusIndicator(chatTarget.status).text}</p>
+                  <p className="text-xs text-gray-500">{getStatusIndicator(chatTarget.online).text}</p>
                 </div>
               </div>
               <button

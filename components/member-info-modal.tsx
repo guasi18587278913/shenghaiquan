@@ -50,13 +50,28 @@ export function MemberInfoModal({
 }: MemberInfoModalProps) {
   const [isFollowing, setIsFollowing] = useState(false)
   const [userData, setUserData] = useState<any>(null)
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    if (memberName) {
-      const user = getUserByName(memberName)
-      setUserData(user)
+    if (memberName && isOpen) {
+      fetchUserData()
     }
-  }, [memberName])
+  }, [memberName, isOpen])
+
+  const fetchUserData = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch(`/api/users/by-name?name=${encodeURIComponent(memberName)}`)
+      if (response.ok) {
+        const data = await response.json()
+        setUserData(data)
+      }
+    } catch (error) {
+      console.error('获取用户信息失败:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const getModalSize = () => {
     switch (size) {
@@ -84,18 +99,19 @@ export function MemberInfoModal({
     }
   }
 
-  const avatar = memberData?.avatar || userData?.image || '/default-avatar.svg'
-  const role = memberData?.role || 'AI开发者'
-  const title = memberData?.title || '深度学习专家'
-  const location = memberData?.location || '北京'
-  const joinDate = memberData?.joinDate || '2023年3月15日'
-  const bio = memberData?.bio || '专注于深度学习和计算机视觉，在AI领域有5年以上经验。'
-  const skills = memberData?.skills || ['AI开发', '数据分析', 'Python']
-  const followers = memberData?.followers || 1234
-  const following = memberData?.following || 156
-  const projects = memberData?.projects || 8
+  // 优先使用传入的 memberData，其次使用从API获取的 userData
+  const avatar = memberData?.avatar || userData?.avatar || '/default-avatar.svg'
+  const role = memberData?.role || userData?.position || userData?.role || 'AI开发者'
+  const title = memberData?.title || userData?.company || '深海圈成员'
+  const location = memberData?.location || userData?.location || '北京'
+  const joinDate = memberData?.joinDate || userData?.joinDate || '2023年3月15日'
+  const bio = memberData?.bio || userData?.bio || '专注于AI产品开发和海外业务。'
+  const skills = memberData?.skills || userData?.skills || ['AI开发', '数据分析', 'Python']
+  const followers = memberData?.followers ?? userData?.followers ?? 1234
+  const following = memberData?.following ?? userData?.following ?? 156
+  const projects = memberData?.projects ?? userData?.projects ?? 8
   const verified = memberData?.verified ?? userData?.verified ?? false
-  const status = memberData?.status || 'online'
+  const status = memberData?.status || userData?.status || 'online'
 
   const getStatusColor = () => {
     switch (status) {

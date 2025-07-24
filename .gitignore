@@ -52,3 +52,25 @@ next-env.d.ts
 # temporary files
 .next 2/
 clean-and-start.sh
+
+# Reports and temporary files
+/reports/
+/temp/
+*.tmp
+*.log
+
+# Database files
+*.db
+*.db-journal
+*.sqlite
+*.sqlite-journal
+
+# Environment files
+.env.local
+.env.*.local
+
+# IDE files
+.idea/
+*.swp
+*.swo
+.DS_Store
