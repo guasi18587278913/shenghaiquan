@@ -1,0 +1,209 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+  
+  /* 深海圈主题色 - 青绿色系 */
+  --primary: #4DD0E1;           /* 主色：青绿色 */
+  --primary-foreground: #ffffff;
+  --primary-dark: #00ACC1;      /* 深青绿 */
+  --primary-light: #80DEEA;     /* 浅青绿 */
+  --secondary: #E0F7FA;         /* 浅青绿背景 */
+  --secondary-foreground: #006064;
+  --accent: #00BCD4;            /* 强调色 */
+  --accent-foreground: #ffffff;
+  --muted: #F5F5F5;
+  --muted-foreground: #6b7280;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --border: #B2EBF2;            /* 青绿色边框 */
+  --input: #E0F7FA;             /* 输入框背景 */
+  --ring: #4DD0E1;              /* 聚焦环颜色 */
+  --radius: 0.5rem;
+  
+  /* 渐变色 */
+  --gradient-start: #006064;
+  --gradient-end: #4DD0E1;
+}
+
+@theme {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-dark: var(--primary-dark);
+  --color-primary-light: var(--primary-light);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-gradient-start: var(--gradient-start);
+  --color-gradient-end: var(--gradient-end);
+  --font-family-sans: "Source Sans Pro", "Noto Sans SC", system-ui, -apple-system, sans-serif;
+  --font-family-mono: "Fira Code", "Cascadia Code", monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+    --primary: #26C6DA;           /* 暗色模式下的青绿色 */
+    --primary-foreground: #ffffff;
+    --primary-dark: #00838F;      
+    --primary-light: #4DD0E1;     
+    --secondary: #004D40;         /* 深青绿背景 */
+    --secondary-foreground: #B2DFDB;
+    --accent: #00ACC1;
+    --accent-foreground: #ffffff;
+    --muted: #111827;
+    --muted-foreground: #9ca3af;
+    --destructive: #dc2626;
+    --destructive-foreground: #ffffff;
+    --border: #00695C;
+    --input: #004D40;
+    --ring: #26C6DA;
+    
+    /* 暗色渐变 */
+    --gradient-start: #004D40;
+    --gradient-end: #00ACC1;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}
+
+/* 全局样式 */
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+/* 内容保护基础样式 */
+.no-select {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+/* 滚动条样式 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--muted);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--muted-foreground);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--foreground);
+}
+
+/* 水印样式 */
+.watermark {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 9999;
+  overflow: hidden;
+}
+
+.watermark::before {
+  content: attr(data-watermark);
+  position: absolute;
+  width: 200%;
+  height: 200%;
+  top: -50%;
+  left: -50%;
+  font-size: 16px;
+  color: rgba(0, 0, 0, 0.05);
+  font-weight: bold;
+  transform: rotate(-45deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 100px;
+}
+
+/* 防截屏模糊效果（仅作为视觉提醒） */
+.blur-on-screenshot {
+  filter: blur(0px);
+  transition: filter 0.3s;
+}
+
+.blur-on-screenshot:hover {
+  filter: blur(8px);
+}
+
+/* 深海圈特色渐变背景 */
+.gradient-bg {
+  background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-light) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* 海浪动画效果 */
+@keyframes wave {
+  0% { transform: translateX(0) translateZ(0) scaleY(1) }
+  50% { transform: translateX(-25%) translateZ(0) scaleY(0.8) }
+  100% { transform: translateX(-50%) translateZ(0) scaleY(1) }
+}
+
+.wave-animation {
+  animation: wave 15s cubic-bezier(0.36, 0.45, 0.63, 0.53) infinite;
+}
+
+/* 卡片悬浮效果 */
+.hover-card {
+  transition: all 0.3s ease;
+}
+
+.hover-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(77, 208, 225, 0.15);
+}
+
+/* 按钮样式增强 */
+.btn-gradient {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: white;
+  transition: all 0.3s ease;
+}
+
+.btn-gradient:hover {
+  background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary) 100%);
+  box-shadow: 0 4px 16px rgba(77, 208, 225, 0.3);
+}
