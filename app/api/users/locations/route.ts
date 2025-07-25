@@ -1,0 +1,86 @@
+import { NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+
+export async function GET() {
+  try {
+    // 聚合用户位置数据
+    const locations = await prisma.user.groupBy({
+      by: ['location'],
+      _count: {
+        location: true
+      },
+      where: {
+        AND: [
+          {
+            location: {
+              not: null
+            }
+          },
+          {
+            location: {
+              not: ''
+            }
+          }
+        ]
+      }
+    })
+
+    // 转换为地图需要的格式
+    const locationData = locations
+      .filter(loc => loc.location && loc.location !== '未知' && loc.location !== '未知位置')
+      .map(loc => {
+        // 处理位置名称，提取城市名
+        let cityName = loc.location
+        
+        // 移除"市"、"省"等后缀
+        cityName = cityName.replace(/[市省区县]$/, '')
+        
+        // 如果包含逗号或其他分隔符，取第一部分
+        if (cityName.includes(',')) {
+          cityName = cityName.split(',')[0].trim()
+        }
+        if (cityName.includes('，')) {
+          cityName = cityName.split('，')[0].trim()
+        }
+        if (cityName.includes(' ')) {
+          cityName = cityName.split(' ')[0].trim()
+        }
+        
+        return {
+          city: cityName,
+          count: loc._count.location,
+          originalLocation: loc.location
+        }
+      })
+      .filter(loc => loc.city) // 过滤掉空城市
+
+    // 合并相同城市的数据
+    const cityMap = new Map<string, number>()
+    locationData.forEach(loc => {
+      const current = cityMap.get(loc.city) || 0
+      cityMap.set(loc.city, current + loc.count)
+    })
+
+    // 转换回数组格式
+    const mergedData = Array.from(cityMap.entries()).map(([city, count]) => ({
+      city,
+      count
+    }))
+
+    // 获取总用户数
+    const totalUsers = await prisma.user.count()
+
+    return NextResponse.json({
+      locations: mergedData,
+      total: totalUsers,
+      locationsCount: mergedData.length
+    })
+    
+  } catch (error) {
+    console.error('获取用户位置数据失败:', error)
+    return NextResponse.json(
+      { error: '获取用户位置数据失败' },
+      { status: 500 }
+    )
+  }
+}
