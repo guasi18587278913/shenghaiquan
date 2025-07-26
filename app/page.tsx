@@ -86,6 +86,7 @@ export default function Home() {
               {/* 描述文字 */}
               <p className="text-xl md:text-2xl mb-12 opacity-90 max-w-3xl mx-auto animate-fadeInUp animate-delay-200">
                 用 AI 编程，兑现你的创意
+                {/* 自动部署测试 v1.0 - 2025-01-26 */}
               </p>
               
               {/* CTA按钮组 */}
