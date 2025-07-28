@@ -1,0 +1,152 @@
+{
+  "sections": [
+    {
+      "title": "前言",
+      "slug": "preface",
+      "description": "了解课程核心理念与学习路径",
+      "order": 1,
+      "requiredTier": "FREE",
+      "courses": [
+        {
+          "title": "课程介绍",
+          "slug": "introduction",
+          "order": 1,
+          "chapters": [
+            {
+              "title": "第1章：课程概览",
+              "order": 1,
+              "lessons": [
+                {
+                  "title": "这套课程有什么不同？",
+                  "type": "TEXT_ONLY",
+                  "order": 1,
+                  "content": "# 这套课程有什么不同？\n\n## 第1个不同：通过AI做软件产品生意，我是一个拿过结果的人。\n\n过去两年市场上出现过很多种AI课程，江湖传言说"做AI产品的没赚钱，做AI课程的赚钱了"，在一定程度上是真的，因为大部分人还没有能力使用AI做出产品并靠产品赚到钱。\n\n我和他们不同。我的产品长期出现在各类"AIGC出海产品排行榜"Top 100里，偶尔还有Top 50和Top 30。我想，仅凭这一点，我就已经击败了99.9%的同行了吧。\n\n也许你想了解我拿到的结果是什么规模？我先展示一个最近的案例吧。\n\n在2025年1月17日上线、我上线了一款新产品——Raphael这是一款典型的MicroSaaS https://raphael.app\n\n它的全部开发周期是1周，就我一个人。\n\n在上线的第一个月，它已经累计100万的月活跃用户，每天有3～4万用户使用它。\n\n## 第2个不同：全面使用AI，直接从实战开始\n\n我们一切流程，都全面使用AI，直接实战。\n\n得益于AI编程工具的日新月异，学员可以在第一周甚至第一天就发布自己的产品，而不需要从最基础的HTML/CSS/JAVASCRIPT开始。\n\n## 第3个不同：探讨用AI做软件产品生意的全流程\n\n对于一门生意而言，编程（无论是否有AI）都不是最重要的一环。我们的课程会涉及到需求挖掘、需求打磨、产品设计、产品实现、用户获取、产品迭代等等，关于MicroSaaS软件生意的一切。",
+                  "isFree": true
+                },
+                {
+                  "title": "你要学什么？",
+                  "type": "TEXT_ONLY",
+                  "order": 2,
+                  "content": "# 你要学什么？\n\n本课程的学习思路，为【四步学习】+【2个作品】\n\n四步学习会按照章节顺序，一步步教你相关知识\n2个作品会让你掌握学到的知识，做出能赚钱的产品\n\n## 学习地图\n\n请先学习完「基础篇」，再一边持续迭代你在基础篇里发布的产品、一边学习后续内容。\n\n在「基础篇」中，我会尽量跳过理论和基础知识，让你直接实操，找到手感。课程以视频为主。课程视频本身只有短短两小时，但是你可能需要使用不少于40小时的时间，才能够真正上手。\n\n第二部分是「认知篇」，我们会涉及到海外软件生意（Micro SaaS）的产品和商业形态探讨，主要以文字内容为主。推荐学习时间为3小时。\n\n第三部分是「内功篇」，我们会尽可能补齐你已经使用过的技术工具背后的原理。\n\n第四部分是「进阶篇」，带你从MVP到商业闭环。",
+                  "isFree": true
+                },
+                {
+                  "title": "学习门槛",
+                  "type": "TEXT_ONLY", 
+                  "order": 3,
+                  "content": "# 学习门槛\n\n## 不需要\n\n❌ 你不需要有编程基础。\n❌ 你不需要曾经从事过互联网行业。\n\n## 需要\n\n### 必备项\n\n✅ 一定的预算，至少$100美元/月。用于购买海外工具、域名、服务器、API等基础设施。如果你想要加快进度，建议准备$1000美元/月。\n\n✅ 你能够配置好网络环境，访问外国网站没有障碍。\n\n✅ 你有一定的英文阅读基础，建议不低于高中英语水平。\n\n✅ 你已经有一个或多个产品idea想要尝试。\n\n### 加分项\n\n✅ 有坚持学习1个月以上的毅力和韧性\n\n✅ 针对遇到的问题及时复盘",
+                  "isFree": true
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "基础篇",
+      "slug": "basic",
+      "description": "10分钟搞定产品雏形",
+      "order": 2,
+      "requiredTier": "ANNUAL",
+      "courses": [
+        {
+          "title": "快速上手AI编程",
+          "slug": "quick-start",
+          "order": 1,
+          "chapters": [
+            {
+              "title": "第1章：产品开发实战",
+              "order": 1,
+              "lessons": [
+                {
+                  "title": "选择你的第一个产品idea",
+                  "type": "VIDEO_TEXT",
+                  "order": 1,
+                  "content": "# 选择你的第一个产品idea\n\n在这节课中，我们会学习：\n\n1. 如何评估产品idea的可行性\n2. 寻找利基市场的方法\n3. 竞品分析技巧\n4. MVP思维的应用",
+                  "videoId": "",
+                  "videoDuration": 1200,
+                  "isFree": false
+                },
+                {
+                  "title": "使用Cursor快速开发",
+                  "type": "VIDEO_TEXT",
+                  "order": 2,
+                  "content": "# 使用Cursor快速开发\n\n## Cursor的核心功能\n\n1. AI代码补全\n2. 对话式编程\n3. 代码重构建议\n4. Bug自动修复",
+                  "videoId": "",
+                  "videoDuration": 1800,
+                  "isFree": false
+                },
+                {
+                  "title": "部署你的第一个产品",
+                  "type": "VIDEO_TEXT",
+                  "order": 3,
+                  "content": "# 部署你的第一个产品\n\n## 部署选项\n\n1. Vercel部署\n2. Railway部署\n3. 自建服务器部署\n4. 域名配置",
+                  "videoId": "",
+                  "videoDuration": 1200,
+                  "isFree": false
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "认知篇",
+      "slug": "cognition",
+      "description": "海外软件生意认知体系",
+      "order": 3,
+      "requiredTier": "ANNUAL",
+      "courses": [
+        {
+          "title": "MicroSaaS商业模式",
+          "slug": "microsaas",
+          "order": 1,
+          "chapters": [
+            {
+              "title": "第1章：理解MicroSaaS",
+              "order": 1,
+              "lessons": [
+                {
+                  "title": "什么是MicroSaaS",
+                  "type": "TEXT_ONLY",
+                  "order": 1,
+                  "content": "# 什么是MicroSaaS\n\n## 定义\n\nMicroSaaS是指由个人或小团队运营的，针对特定利基市场的SaaS产品。\n\n## 特点\n\n1. 小而美\n2. 专注解决一个具体问题\n3. 用户群体精准\n4. 可持续的被动收入",
+                  "isFree": false
+                },
+                {
+                  "title": "如何寻找利基市场",
+                  "type": "TEXT_ONLY",
+                  "order": 2,
+                  "content": "# 如何寻找利基市场\n\n## 方法论\n\n1. 从自身痛点出发\n2. 观察社区需求\n3. 分析竞品缺口\n4. 跨界组合创新",
+                  "isFree": false
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "liveReplays": [
+    {
+      "title": "如何选择AI产品方向 - 2025年趋势分析",
+      "description": "深度解析2025年AI产品机会，帮你找到适合的方向",
+      "category": "product-selection",
+      "videoId": "",
+      "videoDuration": 3600,
+      "liveDate": "2025-01-20T20:00:00Z",
+      "presenter": "刘小排"
+    },
+    {
+      "title": "Cursor编程答疑直播",
+      "description": "解答学员在使用Cursor开发中遇到的问题",
+      "category": "technical-qa",
+      "videoId": "",
+      "videoDuration": 5400,
+      "liveDate": "2025-01-25T20:00:00Z",
+      "presenter": "刘小排"
+    }
+  ]
+}

@@ -74,3 +74,4 @@ clean-and-start.sh
 *.swp
 *.swo
 .DS_Store
+.env

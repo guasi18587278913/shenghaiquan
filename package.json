@@ -10,7 +10,8 @@
     "db:push": "prisma db push",
     "db:seed": "prisma db seed",
     "postinstall": "prisma generate",
-    "import-students": "node --loader ts-node/esm scripts/import-students-final.ts"
+    "import-students": "node --loader ts-node/esm scripts/import-students-final.ts",
+    "import-courses": "node scripts/import-courses.js"
   },
   "prisma": {
     "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
@@ -37,7 +38,7 @@
     "date-fns": "^4.1.0",
     "echarts": "^5.6.0",
     "echarts-for-react": "^3.0.2",
-    "framer-motion": "^12.23.6",
+    "framer-motion": "^12.23.9",
     "highlight.js": "^11.11.1",
     "lodash": "^4.17.21",
     "lucide-react": "^0.525.0",

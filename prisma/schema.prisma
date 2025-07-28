@@ -46,6 +46,7 @@ model User {
   notifications Notification[]
   events        EventParticipant[]
   bookmarks     Bookmark[]
+  lessonNotes   LessonNote[]
 }
 
 enum UserRole {
@@ -131,63 +132,139 @@ model Follow {
   @@unique([followerId, followingId])
 }
 
+// 课程篇章模型（前言、基础篇、认知篇等）
+model CourseSection {
+  id            String    @id @default(cuid())
+  title         String    // 前言/基础篇/认知篇等
+  description   String?
+  slug          String    @unique // preface/basic/cognition等
+  order         Int
+  requiredTier  MembershipTier @default(FREE) // 会员等级要求
+  icon          String?   // 图标
+  color         String?   // 主题色
+  
+  courses       Course[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
 // 课程模型
 model Course {
   id            String    @id @default(cuid())
   title         String
-  description   String
-  cover         String?
-  category      CourseCategory
-  level         CourseLevel
-  price         Float     @default(0)
-  isPaid        Boolean   @default(false)
-  isPublished   Boolean   @default(false)
+  description   String?
+  slug          String    @unique
   order         Int       @default(0)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-
-  // 关系
+  
+  sectionId     String
+  section       CourseSection @relation(fields: [sectionId], references: [id])
+  
   chapters      Chapter[]
   enrollments   Enrollment[]
-}
-
-enum CourseCategory {
-  START_HERE
-  BASIC
-  ADVANCED
-}
-
-enum CourseLevel {
-  BEGINNER
-  INTERMEDIATE
-  ADVANCED
+  
+  totalDuration Int       @default(0) // 总时长(秒)
+  totalLessons  Int       @default(0) // 总课时数
+  
+  isPublished   Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 }
 
 // 章节模型
 model Chapter {
   id            String    @id @default(cuid())
-  courseId      String
-  course        Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
   title         String
   description   String?
-  content       String
-  videoUrl      String?
-  duration      Int?      // 视频时长（秒）
   order         Int       @default(0)
-  isLocked      Boolean   @default(true)
-  unlockType    UnlockType @default(SEQUENTIAL)
+  
+  courseId      String
+  course        Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  
+  lessons       Lesson[]
+  
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-
-  // 关系
-  progress      Progress[]
 }
 
-enum UnlockType {
-  SEQUENTIAL    // 顺序解锁
-  TIME_BASED   // 时间解锁
-  TASK_BASED   // 任务解锁
-  PAID         // 付费解锁
+// 课时模型
+model Lesson {
+  id            String    @id @default(cuid())
+  title         String
+  description   String?
+  type          LessonType // VIDEO_TEXT, TEXT_ONLY
+  order         Int       @default(0)
+  
+  chapterId     String
+  chapter       Chapter   @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  
+  // 内容
+  content       String?   @db.Text // Markdown格式的文稿
+  videoId       String?   // 腾讯云点播fileId
+  videoDuration Int       @default(0) // 时长(秒)
+  
+  // 扩展内容
+  attachments   String?   // JSON附件列表
+  codeExamples  String?   // JSON代码示例
+  homework      String?   // 作业内容
+  
+  // 访问控制
+  isFree        Boolean   @default(false)
+  
+  progress      Progress[]
+  notes         LessonNote[]
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+// 直播回放模型
+model LiveReplay {
+  id            String    @id @default(cuid())
+  title         String
+  description   String?
+  category      String    // product-selection/technical-qa/case-study
+  
+  videoId       String    // 腾讯云点播fileId
+  videoDuration Int       // 时长(秒)
+  
+  liveDate      DateTime  // 直播日期
+  presenter     String    // 主讲人
+  
+  attachments   String?   // JSON附件
+  
+  isPublished   Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+// 课时笔记模型
+model LessonNote {
+  id            String    @id @default(cuid())
+  content       String    @db.Text
+  
+  userId        String
+  user          User      @relation(fields: [userId], references: [id])
+  
+  lessonId      String
+  lesson        Lesson    @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  
+  timestamp     Int?      // 视频时间点(秒)
+  isPublic      Boolean   @default(false)
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  @@unique([userId, lessonId])
+}
+
+enum LessonType {
+  VIDEO_TEXT   // 视频+图文
+  TEXT_ONLY    // 纯图文
+}
+
+enum MembershipTier {
+  FREE         // 免费
+  ANNUAL       // 年度会员
 }
 
 // 课程报名模型
@@ -208,8 +285,8 @@ model Enrollment {
 model Progress {
   id            String    @id @default(cuid())
   userId        String
-  chapterId     String
-  chapter       Chapter   @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  lessonId      String
+  lesson        Lesson    @relation(fields: [lessonId], references: [id], onDelete: Cascade)
   isCompleted   Boolean   @default(false)
   completedAt   DateTime?
   watchTime     Int       @default(0) // 观看时长（秒）
@@ -217,7 +294,7 @@ model Progress {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  @@unique([userId, chapterId])
+  @@unique([userId, lessonId])
 }
 
 // 消息模型

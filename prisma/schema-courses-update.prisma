@@ -1,0 +1,126 @@
+// 课程体系相关模型（添加到现有schema.prisma）
+
+model CourseSection {
+  id          String    @id @default(cuid())
+  title       String    // 前言/基础篇/认知篇等
+  description String?
+  slug        String    @unique // preface/basic/cognition等
+  order       Int
+  requiredTier String   // free/monthly/annual
+  icon        String?   // 图标
+  color       String?   // 主题色
+  
+  courses     Course[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Course {
+  id          String    @id @default(cuid())
+  title       String
+  description String?
+  slug        String    @unique
+  order       Int
+  
+  sectionId   String
+  section     CourseSection @relation(fields: [sectionId], references: [id])
+  
+  chapters    Chapter[]
+  enrollments Enrollment[]
+  
+  totalDuration Int     @default(0) // 总时长(秒)
+  totalLessons  Int     @default(0) // 总课时数
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Chapter {
+  id          String    @id @default(cuid())
+  title       String
+  description String?
+  order       Int
+  
+  courseId    String
+  course      Course    @relation(fields: [courseId], references: [id])
+  
+  lessons     Lesson[]
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Lesson {
+  id          String    @id @default(cuid())
+  title       String
+  description String?
+  type        LessonType // VIDEO_TEXT, TEXT_ONLY, LIVE_REPLAY
+  order       Int
+  
+  chapterId   String
+  chapter     Chapter   @relation(fields: [chapterId], references: [id])
+  
+  // 内容
+  content     String?   @db.Text // Markdown格式的文稿
+  videoUrl    String?   // 视频地址
+  duration    Int       @default(0) // 时长(秒)
+  
+  // 扩展内容
+  attachments Json?     // 附件列表
+  codeExamples Json?    // 代码示例
+  homework    String?   // 作业内容
+  
+  // 访问控制
+  isFree      Boolean   @default(false)
+  
+  progress    Progress[]
+  notes       LessonNote[]
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model LiveReplay {
+  id          String    @id @default(cuid())
+  title       String
+  description String?
+  category    String    // product-selection/technical-qa/case-study
+  
+  videoUrl    String
+  duration    Int
+  
+  liveDate    DateTime  // 直播日期
+  presenter   String    // 主讲人
+  
+  attachments Json?     // PPT、代码等附件
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model LessonNote {
+  id          String    @id @default(cuid())
+  content     String    @db.Text
+  
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  
+  lessonId    String
+  lesson      Lesson    @relation(fields: [lessonId], references: [id])
+  
+  // 视频笔记支持时间戳
+  timestamp   Int?      // 视频时间点(秒)
+  
+  isPublic    Boolean   @default(false) // 是否公开
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  @@unique([userId, lessonId])
+}
+
+enum LessonType {
+  VIDEO_TEXT   // 视频+图文
+  TEXT_ONLY    // 纯图文
+  LIVE_REPLAY  // 直播回放
+}
