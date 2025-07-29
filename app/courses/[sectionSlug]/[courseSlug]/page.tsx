@@ -22,6 +22,7 @@ import {
   RotateCcw,
   Settings
 } from 'lucide-react';
+import LessonContent from '@/components/course/lesson-content';
 
 export default function CourseDetailPage({
   params
@@ -42,13 +43,49 @@ export default function CourseDetailPage({
 
   const fetchCourseDetail = async () => {
     try {
-      const response = await fetch(`/api/courses/detail/${sectionSlug}/${courseSlug}`);
-      const data = await response.json();
-      setCourse(data);
+      // 从静态数据获取课程结构（临时方案，后续可以改为 API）
+      const { getSection, getLesson } = await import('@/lib/course-data');
+      const section = getSection(sectionSlug);
       
-      // 设置第一个课时为当前课时
-      if (data.chapters && data.chapters[0]?.lessons && data.chapters[0].lessons[0]) {
-        setCurrentLesson(data.chapters[0].lessons[0]);
+      if (!section) {
+        throw new Error('Section not found');
+      }
+      
+      // 转换为页面期望的格式
+      const courseData = {
+        id: section.id,
+        title: section.title,
+        description: section.description,
+        chapters: [{
+          id: section.id,
+          title: section.title,
+          lessons: section.lessons.map(lesson => ({
+            id: lesson.id,
+            title: lesson.title,
+            type: lesson.type,
+            content: lesson.content,
+            videoUrl: lesson.videoUrl,
+            wordpressSlug: lesson.wordpressSlug,
+            videoDuration: lesson.duration,
+            isFree: lesson.isFree,
+            order: lesson.order,
+            isNew: lesson.isNew
+          }))
+        }]
+      };
+      
+      setCourse(courseData);
+      
+      // 根据 courseSlug (实际是课时的order) 找到对应的课时
+      if (courseData.chapters && courseData.chapters[0]?.lessons) {
+        const lessonIndex = parseInt(courseSlug) - 1; // URL中的数字减1得到索引
+        const targetLesson = courseData.chapters[0].lessons[lessonIndex];
+        if (targetLesson) {
+          setCurrentLesson(targetLesson);
+        } else if (courseData.chapters[0].lessons[0]) {
+          // 如果找不到，显示第一个课时
+          setCurrentLesson(courseData.chapters[0].lessons[0]);
+        }
       }
     } catch (error) {
       console.error('Failed to fetch course:', error);
@@ -378,16 +415,7 @@ export default function CourseDetailPage({
 
                   {/* 课程内容 */}
                   <div className="bg-white rounded-lg shadow-sm p-8">
-                    {currentLesson.content ? (
-                      <div className="prose prose-lg max-w-none">
-                        <div dangerouslySetInnerHTML={{ __html: currentLesson.content }} />
-                      </div>
-                    ) : (
-                      <div className="text-center py-12 text-gray-500">
-                        <FileText className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                        <p>该课时暂无内容</p>
-                      </div>
-                    )}
+                    <LessonContent lesson={currentLesson} />
                   </div>
 
                   {/* 讨论区 */}
