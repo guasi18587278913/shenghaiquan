@@ -19,6 +19,10 @@ git pull origin main >> $LOG_FILE 2>&1
 echo "$(date '+%Y-%m-%d %H:%M:%S') - 检查依赖更新..." >> $LOG_FILE
 npm install >> $LOG_FILE 2>&1
 
+# 构建项目
+echo "$(date '+%Y-%m-%d %H:%M:%S') - 构建项目..." >> $LOG_FILE
+npm run build >> $LOG_FILE 2>&1
+
 # 运行数据库迁移（如果有新的迁移文件）
 echo "$(date '+%Y-%m-%d %H:%M:%S') - 运行数据库迁移..." >> $LOG_FILE
 npx prisma migrate deploy >> $LOG_FILE 2>&1
