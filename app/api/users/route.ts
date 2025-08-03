@@ -12,19 +12,56 @@ export async function GET(request: Request) {
     
     // 构建查询条件
     const where: any = {}
+    const andConditions: any[] = []
     
     if (search) {
-      where.OR = [
-        { name: { contains: search } },
-        { location: { contains: search } },
-        { company: { contains: search } },
-        { position: { contains: search } }
-      ]
+      andConditions.push({
+        OR: [
+          { name: { contains: search } },
+          { location: { contains: search } },
+          { company: { contains: search } },
+          { position: { contains: search } }
+        ]
+      })
     }
     
-    // 城市筛选
+    // 城市筛选 - 使用模糊匹配以处理不同的location格式
     if (city) {
-      where.location = city
+      andConditions.push({
+        OR: [
+          {
+            location: city  // 精确匹配
+          },
+          {
+            location: {
+              contains: city  // 包含城市名
+            }
+          },
+          {
+            location: `${city}市`  // 带"市"后缀
+          },
+          {
+            location: {
+              contains: `/${city}市/`  // 匹配 "省/市/区" 格式
+            }
+          },
+          {
+            location: {
+              contains: `/${city}/`  // 匹配不带"市"的格式
+            }
+          },
+          {
+            location: {
+              startsWith: city  // 以城市名开头
+            }
+          }
+        ]
+      })
+    }
+    
+    // 合并所有条件
+    if (andConditions.length > 0) {
+      where.AND = andConditions
     }
     
     // Note: online field doesn't exist in current schema

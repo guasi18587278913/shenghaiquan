@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { 
@@ -8,574 +8,635 @@ import {
   FileText, 
   Clock, 
   CheckCircle, 
-  Calendar,
-  Award,
-  ChevronRight,
-  TrendingUp,
+  ArrowRight,
   Users,
   Target,
   Zap,
   BookOpen,
   Lock,
   Sparkles,
-  ArrowRight,
-  MessageSquare,
-  CalendarDays,
-  BarChart3,
+  TrendingUp,
+  Award,
+  Flame,
+  Star,
   Trophy,
-  Flame
+  ChevronRight,
+  Rocket,
+  Brain,
+  Code,
+  MessageCircle,
+  Layers,
+  Gift,
+  Crown,
+  Medal,
+  BarChart
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import UserChat from '@/components/chat/UserChat';
 
-export default function LearningCenterPage() {
+interface CourseSection {
+  id: string;
+  title: string;
+  slug: string;
+  courses?: any[];
+  _count?: { courses: number };
+}
+
+export default function CoursesPage() {
   const { data: session } = useSession();
-  const [activeTab, setActiveTab] = useState('learning');
-  const [completedNode, setCompletedNode] = useState<string | null>(null);
+  const [sections, setSections] = useState<CourseSection[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // 用户学习数据
-  const learningStats = {
-    totalHours: 2.5,
-    completedLessons: 3,
-    totalLessons: 15,
-    currentStreak: 7,
-    nextMilestone: 10,
-    lastLesson: {
-      section: 'basic',
-      lesson: 2,
-      title: '使用Cursor快速开发'
-    }
-  };
+  useEffect(() => {
+    fetchSections();
+  }, []);
 
-  // 学习路径数据 - 整合了目标信息
-  const learningPath = [
-    {
-      id: 'preface',
-      title: '前言',
-      subtitle: '了解课程核心理念',
-      duration: '30分钟',
-      lessons: 3,
-      status: 'completed',
-      progress: 100,
-      icon: 'sparkles',
-      iconTooltip: '核心章节',
-      color: 'violet',
-      milestone: null
-    },
-    {
-      id: 'basic',
-      title: '基础篇',
-      subtitle: '10分钟搞定产品雏形',
-      duration: '2小时',
-      lessons: 5,
-      status: 'in-progress',
-      progress: 40,
-      icon: 'target',
-      color: 'blue',
-      currentLesson: '使用Cursor快速开发',
-      milestone: {
-        title: '第一周发布产品',
-        description: '快速验证你的产品想法',
-        icon: <Trophy className="w-4 h-4" />
+  const fetchSections = async () => {
+    try {
+      const response = await fetch('/api/courses/sections');
+      if (response.ok) {
+        const data = await response.json();
+        setSections(data);
       }
-    },
-    {
-      id: 'cognition',
-      title: '认知篇',
-      subtitle: '海外软件生意认知体系',
-      duration: '3小时',
-      lessons: 5,
-      status: 'locked',
-      progress: 0,
-      icon: 'book-open',
-      color: 'emerald',
-      milestone: {
-        title: '掌握AI编程',
-        description: '学会使用Cursor等AI工具',
-        icon: <Zap className="w-4 h-4" />
-      }
-    },
-    {
-      id: 'internal',
-      title: '内功篇',
-      subtitle: '补齐技术原理',
-      duration: '选修',
-      lessons: 3,
-      status: 'locked',
-      progress: 0,
-      icon: 'zap',
-      color: 'orange',
-      milestone: null
-    },
-    {
-      id: 'advanced',
-      title: '进阶篇',
-      subtitle: '从MVP到商业闭环',
-      duration: '深入提升',
-      lessons: 3,
-      status: 'locked',
-      progress: 0,
-      icon: 'trending-up',
-      color: 'indigo',
-      milestone: {
-        title: '构建商业闭环',
-        description: '从MVP到可持续生意',
-        icon: <Target className="w-4 h-4" />
-      }
-    }
-  ];
-
-  // 颜色映射
-  const colorMap = {
-    violet: {
-      bg: 'bg-violet-50',
-      border: 'border-violet-200',
-      text: 'text-violet-700',
-      progress: 'bg-violet-500',
-      hover: 'hover:bg-violet-100',
-      gradient: 'from-violet-500 to-purple-600',
-      light: 'bg-violet-100'
-    },
-    blue: {
-      bg: 'bg-blue-50',
-      border: 'border-blue-200',
-      text: 'text-blue-700',
-      progress: 'bg-blue-500',
-      hover: 'hover:bg-blue-100',
-      gradient: 'from-blue-500 to-cyan-600',
-      light: 'bg-blue-100'
-    },
-    emerald: {
-      bg: 'bg-emerald-50',
-      border: 'border-emerald-200',
-      text: 'text-emerald-700',
-      progress: 'bg-emerald-500',
-      hover: 'hover:bg-emerald-100',
-      gradient: 'from-emerald-500 to-teal-600',
-      light: 'bg-emerald-100'
-    },
-    orange: {
-      bg: 'bg-orange-50',
-      border: 'border-orange-200',
-      text: 'text-orange-700',
-      progress: 'bg-orange-500',
-      hover: 'hover:bg-orange-100',
-      gradient: 'from-orange-500 to-amber-600',
-      light: 'bg-orange-100'
-    },
-    indigo: {
-      bg: 'bg-indigo-50',
-      border: 'border-indigo-200',
-      text: 'text-indigo-700',
-      progress: 'bg-indigo-500',
-      hover: 'hover:bg-indigo-100',
-      gradient: 'from-indigo-500 to-purple-600',
-      light: 'bg-indigo-100'
+    } catch (error) {
+      console.error('Failed to fetch sections:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // 图标映射
-  const getIcon = (iconType: string, className: string) => {
-    switch (iconType) {
-      case 'sparkles':
-        return <Sparkles className={className} />;
-      case 'target':
-        return <Target className={className} />;
-      case 'book-open':
-        return <BookOpen className={className} />;
-      case 'zap':
-        return <Zap className={className} />;
-      case 'trending-up':
-        return <TrendingUp className={className} />;
-      default:
-        return <Sparkles className={className} />;
-    }
+  // 计算统计数据
+  const calculateStats = () => {
+    const totalCourses = sections.reduce((acc, section) => 
+      acc + (section._count?.courses || section.courses?.length || 0), 0
+    );
+    const totalLessons = totalCourses * 3;
+    const totalHours = Math.round(totalLessons * 0.3);
+    
+    return {
+      sectionsCount: sections.length,
+      coursesCount: totalCourses,
+      lessonsCount: totalLessons,
+      hoursCount: totalHours
+    };
   };
 
-  // 继续学习按钮点击
-  const handleContinueLearning = () => {
-    if (learningStats.lastLesson) {
-      window.location.href = `/courses/${learningStats.lastLesson.section}/${learningStats.lastLesson.lesson}`;
-    }
-  };
+  const stats = calculateStats();
 
-  // 模拟完成节点
-  const handleCompleteNode = (nodeId: string) => {
-    setCompletedNode(nodeId);
-    setTimeout(() => setCompletedNode(null), 3000);
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-20 h-20 relative mx-auto mb-4">
+            <div className="absolute inset-0 rounded-full border-4 border-gray-200"></div>
+            <div className="absolute inset-0 rounded-full border-4 border-teal-600 border-t-transparent animate-spin"></div>
+          </div>
+          <p className="text-gray-600 animate-pulse">正在加载课程...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 用户数据（示例）
+  const userData = {
+    level: 5,
+    xp: 1250,
+    nextLevelXP: 2000,
+    streak: 7,
+    totalHours: 28.5,
+    completedCourses: 12,
+    certificates: 2
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* 顶部欢迎区域 - 简化设计 */}
-      <div className="relative bg-gradient-to-br from-[#003D4D] via-[#005866] to-[#007A8C] text-white overflow-hidden">
-        {/* 背景装饰 - 减少视觉干扰 */}
-        <div className="absolute inset-0">
-          <div className="absolute top-20 right-0 w-64 h-64 bg-cyan-400/5 rounded-full blur-3xl" />
-          <div className="absolute bottom-10 left-0 w-48 h-48 bg-blue-400/5 rounded-full blur-3xl" />
-        </div>
-
-        <div className="relative max-w-7xl mx-auto px-4 pt-24 pb-20">
-          <div className="flex flex-col items-center">
-            {/* 欢迎信息 - 居中显示 */}
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-center mb-8"
-            >
-              <h1 className="text-2xl font-bold">
-                欢迎回来，{session?.user?.name || '学员'}
-              </h1>
-            </motion.div>
-
-            {/* 核心行动区 - 主要焦点 */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.1 }}
-              className="w-full max-w-md"
-            >
-              <button
-                onClick={handleContinueLearning}
-                className="w-full bg-white text-[#005866] px-8 py-5 rounded-2xl text-lg font-semibold hover:shadow-2xl transform hover:-translate-y-1 transition-all flex items-center justify-center gap-3 group"
-              >
-                <div className="p-2 bg-[#005866]/10 rounded-full group-hover:bg-[#005866]/20 transition-colors">
-                  <Play className="w-5 h-5" />
+      {/* 顶部用户信息栏 - 添加固定定位和z-index */}
+      <div className="bg-white border-b fixed top-16 left-0 right-0 z-30">
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            {/* 左侧：用户信息 */}
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <div className="w-12 h-12 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                  {session?.user?.name?.[0] || '测'}
                 </div>
-                <span>继续学习：{learningStats.lastLesson.title}</span>
-                <ChevronRight className="w-5 h-5 opacity-50 group-hover:translate-x-1 transition-transform" />
-              </button>
-              
-              {/* 进度指示 - 更简洁 */}
-              <div className="mt-4 flex items-center justify-center gap-2">
-                <div className="text-xs text-cyan-200">当前进度</div>
-                <div className="flex-1 max-w-[200px] bg-white/20 rounded-full h-1.5">
-                  <div 
-                    className="bg-white h-1.5 rounded-full transition-all duration-500"
-                    style={{ width: `${(learningStats.completedLessons / learningStats.totalLessons) * 100}%` }}
-                  />
-                </div>
-                <div className="text-xs text-cyan-200">
-                  {Math.round((learningStats.completedLessons / learningStats.totalLessons) * 100)}%
+                <div className="absolute -bottom-1 -right-1 bg-amber-400 text-gray-900 text-xs font-bold px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
+                  Lv.{userData.level}
                 </div>
               </div>
-            </motion.div>
+              <div>
+                <h2 className="text-lg font-bold text-gray-900">{session?.user?.name || '测试用户'}</h2>
+                <div className="flex items-center gap-4 text-sm text-gray-600">
+                  <div className="flex items-center gap-1">
+                    <Star className="w-4 h-4 text-amber-500" />
+                    <span>{userData.xp} XP</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Flame className="w-4 h-4 text-orange-500" />
+                    <span>{userData.streak}天连续</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 右侧：学习统计 */}
+            <div className="flex items-center gap-6">
+              <div className="text-center">
+                <p className="text-xl font-bold text-gray-900">{userData.totalHours}h</p>
+                <p className="text-xs text-gray-500">学习时长</p>
+              </div>
+              <div className="text-center">
+                <p className="text-xl font-bold text-gray-900">{userData.completedCourses}</p>
+                <p className="text-xs text-gray-500">完成课程</p>
+              </div>
+              <div className="text-center">
+                <p className="text-xl font-bold text-gray-900">{userData.certificates}</p>
+                <p className="text-xs text-gray-500">获得证书</p>
+              </div>
+            </div>
+          </div>
+
+          {/* 等级进度条 */}
+          <div className="mt-2">
+            <div className="flex items-center justify-between text-xs mb-1">
+              <span className="text-gray-600">等级进度</span>
+              <span className="text-gray-900 font-medium">{userData.xp}/{userData.nextLevelXP} XP</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${(userData.xp / userData.nextLevelXP) * 100}%` }}
+                transition={{ duration: 1 }}
+                className="h-full bg-gradient-to-r from-teal-500 to-cyan-600"
+              />
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4">
-        {/* 核心数据统计区 - 可交互 */}
-        <div className="relative -mt-10 mb-8">
-          <div className="grid grid-cols-4 gap-4">
-            <motion.div 
-              whileHover={{ y: -2 }}
-              className="bg-white rounded-xl shadow-md p-5 border border-gray-100 cursor-pointer hover:shadow-lg transition-all"
-              onClick={() => console.log('跳转到学习数据分析')}
-            >
-              <div className="flex items-center justify-between mb-2">
-                <Clock className="w-5 h-5 text-cyan-600" />
-                <BarChart3 className="w-4 h-4 text-gray-300" />
-              </div>
-              <p className="text-2xl font-bold text-gray-900">{learningStats.totalHours}h</p>
-              <p className="text-sm text-gray-500">学习时长</p>
-            </motion.div>
-            
-            <motion.div 
-              whileHover={{ y: -2 }}
-              className="bg-white rounded-xl shadow-md p-5 border border-gray-100 cursor-pointer hover:shadow-lg transition-all"
-              onClick={() => console.log('跳转到已完成课程')}
-            >
-              <div className="flex items-center justify-between mb-2">
-                <CheckCircle className="w-5 h-5 text-green-600" />
-                <ChevronRight className="w-4 h-4 text-gray-300" />
-              </div>
-              <p className="text-2xl font-bold text-gray-900">{learningStats.completedLessons}/{learningStats.totalLessons}</p>
-              <p className="text-sm text-gray-500">已完成</p>
-            </motion.div>
-            
-            <motion.div 
-              whileHover={{ y: -2 }}
-              className="bg-white rounded-xl shadow-md p-5 border border-gray-100 cursor-pointer hover:shadow-lg transition-all"
-              onClick={() => console.log('展示学习日历')}
-            >
-              <div className="flex items-center justify-between mb-2">
-                <Flame className="w-5 h-5 text-orange-600" />
-                <CalendarDays className="w-4 h-4 text-gray-300" />
-              </div>
-              <p className="text-2xl font-bold text-gray-900">{learningStats.currentStreak}天</p>
-              <p className="text-sm text-gray-500">连续学习</p>
-            </motion.div>
-            
-            <motion.div 
-              whileHover={{ y: -2 }}
-              className="bg-white rounded-xl shadow-md p-5 border border-gray-100 cursor-pointer hover:shadow-lg transition-all"
-              onClick={() => console.log('高亮对应目标节点')}
-            >
-              <div className="flex items-center justify-between mb-2">
-                <Trophy className="w-5 h-5 text-purple-600" />
-                <Target className="w-4 h-4 text-gray-300" />
-              </div>
-              <p className="text-2xl font-bold text-gray-900">{learningStats.nextMilestone}天</p>
-              <p className="text-sm text-gray-500">下个目标</p>
-            </motion.div>
-          </div>
-        </div>
+      {/* 课程板块网格 - 添加顶部间距 */}
+      <div className="max-w-7xl mx-auto px-4 pt-48">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* 前言 - Start Here */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+          >
+            <Link href="/courses/preface/intro">
+              <div className="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden h-full">
+                {/* 顶部大图标区域 */}
+                <div className="relative h-48 bg-gradient-to-r from-[#14b8a6] to-[#0891b2] p-8 flex flex-col items-center justify-center">
+                  <div className="absolute top-4 left-4">
+                    <p className="text-xs text-white/90 font-medium">深海圈动态</p>
+                  </div>
+                  <div className="absolute top-4 right-4 bg-orange-500 px-3 py-1 rounded-full text-sm font-medium text-white">
+                    🔥 最热
+                  </div>
+                  <h3 className="text-4xl font-bold text-white mb-2">前言</h3>
+                  <p className="text-white/80 text-sm">开始学习</p>
+                </div>
 
-        {/* 标签导航 */}
-        <div className="flex items-center gap-2 mb-8 bg-white rounded-xl p-1.5 shadow-sm">
-          <button
-            onClick={() => setActiveTab('learning')}
-            className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all ${
-              activeTab === 'learning'
-                ? 'bg-gradient-to-r from-[#0891A1] to-[#17B8C4] text-white shadow-md'
-                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-            }`}
-          >
-            <BookOpen className="w-4 h-4" />
-            学习路径
-          </button>
-          <button
-            onClick={() => setActiveTab('achievements')}
-            className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all ${
-              activeTab === 'achievements'
-                ? 'bg-gradient-to-r from-[#0891A1] to-[#17B8C4] text-white shadow-md'
-                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-            }`}
-          >
-            <Award className="w-4 h-4" />
-            我的成就
-          </button>
-          <button
-            onClick={() => setActiveTab('community')}
-            className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all ${
-              activeTab === 'community'
-                ? 'bg-gradient-to-r from-[#0891A1] to-[#17B8C4] text-white shadow-md'
-                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-            }`}
-          >
-            <Users className="w-4 h-4" />
-            学习社区
-          </button>
-        </div>
-
-        {/* 主内容区 - 左中双栏布局 */}
-        {activeTab === 'learning' && (
-          <div className="space-y-6 mb-12">
-            <h2 className="text-2xl font-bold text-gray-900">学习路径</h2>
-            
-            {learningPath.map((section, index) => {
-              const colors = colorMap[section.color as keyof typeof colorMap];
-              const isLocked = section.status === 'locked' && !session;
-              
-              return (
-                <motion.div
-                  key={section.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  className={`relative bg-white rounded-xl shadow-sm hover:shadow-lg transition-all overflow-hidden ${
-                    isLocked ? 'opacity-75' : ''
-                  }`}
-                >
-                  {/* 章节序号 */}
-                  <div className="absolute top-6 left-6 w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
-                    <span className="text-lg font-bold text-gray-600">{index + 1}</span>
+                {/* 内容区域 */}
+                <div className="p-6">
+                  <h4 className="text-xl font-bold text-gray-900 mb-2">前言</h4>
+                  <p className="text-gray-600 mb-4">
+                    新手必看！了解课程体系，制定学习计划，10分钟快速上手AI产品开发。
+                  </p>
+                  
+                  {/* 课程数量 */}
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-4 text-sm text-gray-500">
+                      <span className="flex items-center gap-1">
+                        <FileText className="w-4 h-4" />
+                        3 个课程
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-4 h-4" />
+                        30分钟
+                      </span>
+                    </div>
+                    <span className="text-sm font-medium text-orange-600">+100 XP</span>
                   </div>
 
-                  <div className="p-6 pl-24">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <h3 className="text-xl font-bold text-gray-900">{section.title}</h3>
-                          
-                          {/* 图标和提示 */}
-                          <div className="relative group">
-                            <div className={`p-1.5 ${colors.light} rounded-lg`}>
-                              {getIcon(section.icon, `w-5 h-5 ${colors.text}`)}
-                            </div>
-                            {section.iconTooltip && (
-                              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                                {section.iconTooltip}
-                              </div>
-                            )}
-                          </div>
-
-                          {section.status === 'completed' && (
-                            <motion.span 
-                              initial={{ scale: 0 }}
-                              animate={{ scale: 1 }}
-                              className="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full font-medium"
-                            >
-                              已完成
-                            </motion.span>
-                          )}
-                          {section.status === 'in-progress' && (
-                            <span className="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded-full font-medium">
-                              学习中
-                            </span>
-                          )}
-                          {isLocked && (
-                            <Lock className="w-4 h-4 text-gray-400" />
-                          )}
-                        </div>
-                        
-                        <p className="text-gray-600 mb-3">{section.subtitle}</p>
-                        
-                        <div className="flex items-center gap-4 text-sm text-gray-500">
-                          <span className="flex items-center gap-1">
-                            <Clock className="w-4 h-4" />
-                            {section.duration}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <FileText className="w-4 h-4" />
-                            {section.lessons} 课时
-                          </span>
-                        </div>
-
-                        {/* 进度条 */}
-                        {section.status !== 'locked' && (
-                          <div className="mt-4">
-                            <div className="flex items-center justify-between text-sm mb-2">
-                              <span className="text-gray-600">完成进度</span>
-                              <span className={`font-medium ${colors.text}`}>{section.progress}%</span>
-                            </div>
-                            <div className="w-full bg-gray-100 rounded-full h-2">
-                              <motion.div 
-                                initial={{ width: 0 }}
-                                animate={{ width: `${section.progress}%` }}
-                                transition={{ duration: 1, delay: 0.5 }}
-                                className={`bg-gradient-to-r ${colors.gradient} h-2 rounded-full`}
-                              />
-                            </div>
-                          </div>
-                        )}
-
-                        {/* 当前课程提示 */}
-                        {section.currentLesson && (
-                          <div className={`mt-4 ${colors.bg} ${colors.border} border rounded-lg p-3`}>
-                            <p className="text-sm text-gray-600">当前学习</p>
-                            <p className={`font-medium ${colors.text}`}>{section.currentLesson}</p>
-                          </div>
-                        )}
-
-                        {/* 里程碑整合 */}
-                        {section.milestone && (
-                          <motion.div 
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ delay: 0.3 }}
-                            className="mt-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg p-4 border border-gray-200"
-                          >
-                            <div className="flex items-start gap-3">
-                              <div className="p-2 bg-white rounded-lg shadow-sm">
-                                {section.milestone.icon}
-                              </div>
-                              <div>
-                                <h4 className="font-semibold text-gray-900 text-sm">{section.milestone.title}</h4>
-                                <p className="text-xs text-gray-600 mt-0.5">{section.milestone.description}</p>
-                              </div>
-                            </div>
-                          </motion.div>
-                        )}
-
-                        {/* 社区联动 */}
-                        <div className="mt-4 flex items-center gap-3 text-sm">
-                          <button className="flex items-center gap-1 text-gray-500 hover:text-[#0891A1] transition-colors">
-                            <MessageSquare className="w-4 h-4" />
-                            查看相关讨论
-                          </button>
-                          <button className="flex items-center gap-1 text-gray-500 hover:text-[#0891A1] transition-colors">
-                            <Users className="w-4 h-4" />
-                            向同学提问
-                          </button>
-                        </div>
-                      </div>
+                  {/* 进度条 */}
+                  <div className="mb-4">
+                    <div className="flex justify-between text-xs mb-1">
+                      <span className="text-gray-600">完成进度</span>
+                      <span className="text-gray-900 font-medium">100%</span>
                     </div>
-
-                    {/* 操作按钮 */}
-                    <div className="mt-6 flex items-center gap-3">
-                      {section.status === 'completed' && (
-                        <Link
-                          href={`/courses/${section.id}/1`}
-                          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 font-medium"
-                        >
-                          <CheckCircle className="w-5 h-5 text-green-500" />
-                          查看复习
-                        </Link>
-                      )}
-                      {section.status === 'in-progress' && (
-                        <Link
-                          href={`/courses/${section.id}/2`}
-                          className={`flex items-center gap-2 bg-gradient-to-r ${colors.gradient} text-white px-6 py-2.5 rounded-lg font-medium hover:shadow-lg transform hover:-translate-y-0.5 transition-all`}
-                        >
-                          继续学习
-                          <ArrowRight className="w-4 h-4" />
-                        </Link>
-                      )}
-                      {section.status === 'locked' && !session && (
-                        <Link
-                          href="/login"
-                          className="flex items-center gap-2 text-gray-500 hover:text-gray-700 font-medium"
-                        >
-                          <Lock className="w-4 h-4" />
-                          登录解锁
-                        </Link>
-                      )}
-                      {section.status === 'locked' && session && (
-                        <button
-                          disabled
-                          className="flex items-center gap-2 text-gray-400 font-medium cursor-not-allowed"
-                        >
-                          <Lock className="w-4 h-4" />
-                          完成前置章节后解锁
-                        </button>
-                      )}
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div className="w-full h-full bg-gradient-to-r from-teal-400 to-teal-500 rounded-full"></div>
                     </div>
                   </div>
-                </motion.div>
-              );
-            })}
-          </div>
-        )}
 
-        {/* 成就页面 */}
-        {activeTab === 'achievements' && (
-          <div className="bg-white rounded-xl shadow-sm p-8 text-center">
-            <Award className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">成就系统即将上线</h3>
-            <p className="text-gray-600">完成学习任务，解锁成就徽章，展示你的学习成果</p>
-          </div>
-        )}
+                  {/* 按钮 */}
+                  <button className="w-full bg-green-50 text-green-700 py-3 rounded-xl font-medium flex items-center justify-center gap-2">
+                    <CheckCircle className="w-5 h-5" />
+                    已完成
+                  </button>
+                </div>
+              </div>
+            </Link>
+          </motion.div>
 
-        {/* 社区页面 */}
-        {activeTab === 'community' && (
-          <div className="bg-white rounded-xl shadow-sm p-8 text-center">
-            <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">学习社区即将开放</h3>
-            <p className="text-gray-600">与其他学员交流心得，分享作品，共同成长</p>
-          </div>
-        )}
+          {/* 基础篇 - Basic Courses */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <Link href="/courses/basic/play-with-cursor">
+              <div className="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden h-full">
+                {/* 顶部大图标区域 */}
+                <div className="relative h-48 bg-[#a78bfa] p-8 flex flex-col items-center justify-center">
+                  <div className="absolute top-4 right-4 bg-white/20 backdrop-blur px-3 py-1 rounded-full text-sm font-medium text-white">
+                    基础课程
+                  </div>
+                  <h3 className="text-4xl font-bold text-white mb-2">基础篇</h3>
+                  <p className="text-white/80 text-sm">基础技能</p>
+                </div>
+
+                {/* 内容区域 */}
+                <div className="p-6">
+                  <h4 className="text-xl font-bold text-gray-900 mb-2">基础篇</h4>
+                  <p className="text-gray-600 mb-4">
+                    零基础友好！学习Cursor、快速原型开发，10分钟打造你的第一个AI产品。
+                  </p>
+                  
+                  {/* 课程数量 */}
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-4 text-sm text-gray-500">
+                      <span className="flex items-center gap-1">
+                        <FileText className="w-4 h-4" />
+                        5 个课程
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-4 h-4" />
+                        2小时
+                      </span>
+                    </div>
+                    <span className="text-sm font-medium text-blue-600">+300 XP</span>
+                  </div>
+
+                  {/* 进度条 */}
+                  <div className="mb-4">
+                    <div className="flex justify-between text-xs mb-1">
+                      <span className="text-gray-600">完成进度</span>
+                      <span className="text-gray-900 font-medium">35%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div className="w-[35%] h-full bg-gradient-to-r from-teal-400 to-teal-500 rounded-full"></div>
+                    </div>
+                  </div>
+
+                  {/* 按钮 */}
+                  <button className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 text-white py-3 rounded-xl font-medium flex items-center justify-center gap-2 group-hover:shadow-lg transition-shadow">
+                    继续学习
+                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  </button>
+                </div>
+              </div>
+            </Link>
+          </motion.div>
+
+          {/* 认知篇 - Advanced Mindset */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+          >
+            <Link href="/courses/cognition/ai-product-thinking">
+              <div className="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden h-full">
+                {/* 顶部大图标区域 */}
+                <div className="relative h-48 bg-[#fdba74] p-8 flex flex-col items-center justify-center">
+                  <div className="absolute top-4 right-4 bg-white/20 backdrop-blur px-3 py-1 rounded-full text-sm font-medium text-white">
+                    思维进阶
+                  </div>
+                  <h3 className="text-4xl font-bold text-white mb-2">认知篇</h3>
+                  <p className="text-white/80 text-sm">产品思维</p>
+                </div>
+
+                {/* 锁定遮罩 */}
+                <div className="absolute inset-0 bg-gray-900/10 backdrop-blur-sm z-10 flex items-center justify-center">
+                  <div className="bg-white rounded-full p-3 shadow-xl">
+                    <Lock className="w-6 h-6 text-gray-600" />
+                  </div>
+                </div>
+
+                {/* 内容区域 */}
+                <div className="p-6">
+                  <h4 className="text-xl font-bold text-gray-900 mb-2">认知篇</h4>
+                  <p className="text-gray-600 mb-4">
+                    建立正确的AI产品思维，理解商业本质，掌握海外软件生意的核心逻辑。
+                  </p>
+                  
+                  {/* 课程数量 */}
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-4 text-sm text-gray-500">
+                      <span className="flex items-center gap-1">
+                        <FileText className="w-4 h-4" />
+                        4 个课程
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-4 h-4" />
+                        3小时
+                      </span>
+                    </div>
+                    <span className="text-sm font-medium text-purple-600">+500 XP</span>
+                  </div>
+
+                  {/* 进度条 */}
+                  <div className="mb-4">
+                    <div className="flex justify-between text-xs mb-1">
+                      <span className="text-gray-600">完成进度</span>
+                      <span className="text-gray-900 font-medium">0%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div className="w-0 h-full bg-gradient-to-r from-gray-400 to-gray-500 rounded-full"></div>
+                    </div>
+                  </div>
+
+                  {/* 按钮 */}
+                  <button className="w-full bg-gray-100 text-gray-500 py-3 rounded-xl font-medium cursor-not-allowed">
+                    待解锁
+                  </button>
+                </div>
+              </div>
+            </Link>
+          </motion.div>
+
+          {/* 内功篇 - Technical Foundation */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+          >
+            <Link href="/courses/skills/programming-basics">
+              <div className="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden h-full">
+                {/* 顶部大图标区域 */}
+                <div className="relative h-48 bg-[#c084fc] p-8 flex flex-col items-center justify-center">
+                  <div className="absolute top-4 right-4 bg-white/20 backdrop-blur px-3 py-1 rounded-full text-sm font-medium text-white">
+                    技术深度
+                  </div>
+                  <h3 className="text-4xl font-bold text-white mb-2">内功篇</h3>
+                  <p className="text-white/80 text-sm">技术内功</p>
+                </div>
+
+                {/* 锁定遮罩 */}
+                <div className="absolute inset-0 bg-gray-900/10 backdrop-blur-sm z-10 flex items-center justify-center">
+                  <div className="bg-white rounded-full p-3 shadow-xl">
+                    <Lock className="w-6 h-6 text-gray-600" />
+                  </div>
+                </div>
+
+                {/* 内容区域 */}
+                <div className="p-6">
+                  <h4 className="text-xl font-bold text-gray-900 mb-2">内功篇</h4>
+                  <p className="text-gray-600 mb-4">
+                    深入技术原理，掌握编程基础，构建系统架构思维，打造技术护城河。
+                  </p>
+                  
+                  {/* 课程数量 */}
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-4 text-sm text-gray-500">
+                      <span className="flex items-center gap-1">
+                        <FileText className="w-4 h-4" />
+                        6 个课程
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-4 h-4" />
+                        4小时
+                      </span>
+                    </div>
+                    <span className="text-sm font-medium text-emerald-600">+800 XP</span>
+                  </div>
+
+                  {/* 进度条 */}
+                  <div className="mb-4">
+                    <div className="flex justify-between text-xs mb-1">
+                      <span className="text-gray-600">完成进度</span>
+                      <span className="text-gray-900 font-medium">0%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div className="w-0 h-full bg-gradient-to-r from-gray-400 to-gray-500 rounded-full"></div>
+                    </div>
+                  </div>
+
+                  {/* 按钮 */}
+                  <button className="w-full bg-gray-100 text-gray-500 py-3 rounded-xl font-medium cursor-not-allowed">
+                    待解锁
+                  </button>
+                </div>
+              </div>
+            </Link>
+          </motion.div>
+
+          {/* 进阶篇 - Business & Scale */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+          >
+            <Link href="/courses/advanced/mvp-to-scale">
+              <div className="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden h-full">
+                {/* 顶部大图标区域 */}
+                <div className="relative h-48 bg-[#86efac] p-8 flex flex-col items-center justify-center">
+                  <div className="absolute top-4 right-4 bg-white/20 backdrop-blur px-3 py-1 rounded-full text-sm font-medium text-white">
+                    高级进阶
+                  </div>
+                  <h3 className="text-4xl font-bold text-white mb-2">进阶篇</h3>
+                  <p className="text-white/80 text-sm">商业闭环</p>
+                </div>
+
+                {/* 锁定遮罩 */}
+                <div className="absolute inset-0 bg-gray-900/10 backdrop-blur-sm z-10 flex items-center justify-center">
+                  <div className="bg-white rounded-full p-3 shadow-xl">
+                    <Lock className="w-6 h-6 text-gray-600" />
+                  </div>
+                </div>
+
+                {/* 内容区域 */}
+                <div className="p-6">
+                  <h4 className="text-xl font-bold text-gray-900 mb-2">进阶篇</h4>
+                  <p className="text-gray-600 mb-4">
+                    从MVP到规模化，学习高级功能开发、商业化运营，打造可持续的生意。
+                  </p>
+                  
+                  {/* 课程数量 */}
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-4 text-sm text-gray-500">
+                      <span className="flex items-center gap-1">
+                        <FileText className="w-4 h-4" />
+                        5 个课程
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-4 h-4" />
+                        5小时
+                      </span>
+                    </div>
+                    <span className="text-sm font-medium text-red-600">+1000 XP</span>
+                  </div>
+
+                  {/* 进度条 */}
+                  <div className="mb-4">
+                    <div className="flex justify-between text-xs mb-1">
+                      <span className="text-gray-600">完成进度</span>
+                      <span className="text-gray-900 font-medium">0%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div className="w-0 h-full bg-gradient-to-r from-gray-400 to-gray-500 rounded-full"></div>
+                    </div>
+                  </div>
+
+                  {/* 按钮 */}
+                  <button className="w-full bg-gray-100 text-gray-500 py-3 rounded-xl font-medium cursor-not-allowed">
+                    待解锁
+                  </button>
+                </div>
+              </div>
+            </Link>
+          </motion.div>
+
+          {/* 问答篇 - Q&A & Community */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+          >
+            <Link href="/courses/qa/common-questions">
+              <div className="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden h-full">
+                {/* 顶部大图标区域 */}
+                <div className="relative h-48 bg-[#64748b] p-8 flex flex-col items-center justify-center">
+                  <div className="absolute top-4 right-4 bg-white/20 backdrop-blur px-3 py-1 rounded-full text-sm font-medium text-white">
+                    持续更新
+                  </div>
+                  <h3 className="text-4xl font-bold text-white mb-2">问答社区</h3>
+                  <p className="text-white/80 text-sm">持续更新</p>
+                </div>
+
+                {/* 更新标签 */}
+                <div className="absolute top-0 left-0">
+                  <div className="w-16 h-16 bg-green-500 transform rotate-45 -translate-x-8 -translate-y-8"></div>
+                  <span className="absolute top-2 left-2 text-white text-xs font-bold">新</span>
+                </div>
+
+                {/* 内容区域 */}
+                <div className="p-6">
+                  <h4 className="text-xl font-bold text-gray-900 mb-2">问答</h4>
+                  <p className="text-gray-600 mb-4">
+                    常见问题解答，经验分享，与其他学员交流心得，共同成长进步。
+                  </p>
+                  
+                  {/* 课程数量 */}
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-4 text-sm text-gray-500">
+                      <span className="flex items-center gap-1">
+                        <MessageCircle className="w-4 h-4" />
+                        持续更新
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Users className="w-4 h-4" />
+                        社区互动
+                      </span>
+                    </div>
+                    <span className="text-sm font-medium text-gray-600">+200 XP</span>
+                  </div>
+
+                  {/* 最新动态 */}
+                  <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+                    <p className="text-xs text-gray-500 mb-1">最新回答</p>
+                    <p className="text-sm text-gray-700">如何快速上手Cursor？</p>
+                  </div>
+
+                  {/* 按钮 */}
+                  <button className="w-full bg-gradient-to-r from-gray-600 to-gray-800 text-white py-3 rounded-xl font-medium flex items-center justify-center gap-2 group-hover:shadow-lg transition-shadow">
+                    查看问答
+                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  </button>
+                </div>
+              </div>
+            </Link>
+          </motion.div>
+        </div>
+
+        {/* 底部成就和排行榜 */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-12 pb-12">
+          {/* 最新成就 */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.7 }}
+            className="bg-white rounded-2xl shadow-lg p-8"
+          >
+            <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+              <Trophy className="w-6 h-6 text-yellow-500" />
+              最新成就
+            </h3>
+            <div className="grid grid-cols-3 gap-4">
+              {[
+                { name: '连续学习', icon: '🔥', desc: '连续7天' },
+                { name: 'AI先锋', icon: '⚡', desc: '完成基础篇' },
+                { name: '快速学习者', icon: '🎯', desc: '首个课程' }
+              ].map((achievement, index) => (
+                <div key={index} className="text-center">
+                  <div className="w-16 h-16 bg-gradient-to-br from-yellow-100 to-yellow-200 rounded-2xl flex items-center justify-center mx-auto mb-2 text-3xl">
+                    {achievement.icon}
+                  </div>
+                  <p className="text-sm font-medium text-gray-900">{achievement.name}</p>
+                  <p className="text-xs text-gray-500">{achievement.desc}</p>
+                </div>
+              ))}
+            </div>
+            <Link href="/achievements" className="mt-6 inline-flex items-center gap-1 text-sm text-teal-600 hover:text-teal-700 font-medium">
+              查看全部成就
+              <ChevronRight className="w-4 h-4" />
+            </Link>
+          </motion.div>
+
+          {/* 本周排行榜 */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8 }}
+            className="bg-white rounded-2xl shadow-lg p-8"
+          >
+            <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+              <Crown className="w-6 h-6 text-orange-500" />
+              本周排行榜
+            </h3>
+            <div className="space-y-3">
+              {[
+                { name: '学习达人', xp: 2850, rank: 1, avatar: '👨‍💻' },
+                { name: 'AI探索者', xp: 2650, rank: 2, avatar: '👩‍🚀' },
+                { name: '产品新星', xp: 2400, rank: 3, avatar: '🧑‍💼' }
+              ].map((user) => (
+                <div key={user.rank} className="flex items-center justify-between bg-gray-50 rounded-xl px-4 py-3">
+                  <div className="flex items-center gap-3">
+                    <span className={`text-lg font-bold ${
+                      user.rank === 1 ? 'text-yellow-500' : 
+                      user.rank === 2 ? 'text-gray-400' : 
+                      'text-orange-400'
+                    }`}>#{user.rank}</span>
+                    <div className="w-10 h-10 bg-gradient-to-br from-purple-100 to-pink-100 rounded-full flex items-center justify-center text-xl">
+                      {user.avatar}
+                    </div>
+                    <span className="font-medium text-gray-900">{user.name}</span>
+                  </div>
+                  <span className="text-sm font-bold text-gray-600">{user.xp} XP</span>
+                </div>
+              ))}
+            </div>
+            <Link href="/leaderboard" className="mt-6 inline-flex items-center gap-1 text-sm text-teal-600 hover:text-teal-700 font-medium">
+              查看完整排行榜
+              <ChevronRight className="w-4 h-4" />
+            </Link>
+          </motion.div>
+        </div>
       </div>
 
-      {/* 成就提示弹窗 - 示例 */}
-      {completedNode && (
-        <motion.div
-          initial={{ opacity: 0, y: -20, x: 20 }}
-          animate={{ opacity: 1, y: 0, x: 0 }}
-          exit={{ opacity: 0, y: -20, x: 20 }}
-          className="fixed top-20 right-4 bg-white rounded-lg shadow-xl p-4 border border-gray-100 z-50"
-        >
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-green-100 rounded-full">
-              <Trophy className="w-5 h-5 text-green-600" />
-            </div>
-            <div>
-              <p className="font-semibold text-gray-900">恭喜！完成了一个学习节点</p>
-              <p className="text-sm text-gray-600">继续加油，离目标更近一步</p>
-            </div>
-          </div>
-        </motion.div>
-      )}
+      {/* 聊天功能 */}
+      <UserChat />
     </div>
   );
 }

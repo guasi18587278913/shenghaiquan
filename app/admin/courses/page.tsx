@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { Plus, Edit, Trash2, Save, X, FileText, Video, ChevronDown, ChevronRight } from 'lucide-react';
+import { Plus, Edit, Trash2, Save, X, FileText, Video, ChevronDown, ChevronRight, Upload, FileUp, Feather, Image as ImageIcon } from 'lucide-react';
+import { EnhancedEditor } from '@/components/course/enhanced-editor';
 // import { RichCourseEditor, courseTemplates } from '@/components/rich-course-editor';
 
 interface Lesson {
@@ -22,6 +23,111 @@ interface Section {
   slug: string;
   description: string;
   lessons: Lesson[];
+}
+
+// 快速内容创建组件
+function QuickContentCreator({ onSuccess }: { onSuccess: () => void }) {
+  const [content, setContent] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  return (
+    <div className="mt-8 bg-green-50 rounded-lg p-6">
+      <h2 className="text-lg font-semibold text-green-900 mb-4">快速添加内容</h2>
+      <p className="text-green-800 mb-4">直接在下方粘贴飞书文档内容，系统会自动检测并上传图片</p>
+      
+      <div className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+          <input
+            type="text"
+            placeholder="章节标题（如：前言）"
+            className="px-3 py-2 border rounded-lg"
+            id="quick-section-title"
+          />
+          <input
+            type="text"
+            placeholder="URL标识（如：preface）"
+            className="px-3 py-2 border rounded-lg"
+            id="quick-section-slug"
+          />
+        </div>
+        
+        <input
+          type="text"
+          placeholder="课时标题（如：你要学什么？）"
+          className="w-full px-3 py-2 border rounded-lg"
+          id="quick-lesson-title"
+        />
+        
+        {/* 使用增强编辑器 */}
+        <EnhancedEditor
+          value={content}
+          onChange={setContent}
+          placeholder="在这里粘贴飞书文档内容，图片会自动上传..."
+          minHeight="200px"
+        />
+        
+        <button
+          onClick={async () => {
+            const sectionTitle = (document.getElementById('quick-section-title') as HTMLInputElement)?.value;
+            const sectionSlug = (document.getElementById('quick-section-slug') as HTMLInputElement)?.value;
+            const lessonTitle = (document.getElementById('quick-lesson-title') as HTMLInputElement)?.value;
+            
+            if (!sectionTitle || !sectionSlug || !lessonTitle || !content) {
+              alert('请填写所有字段');
+              return;
+            }
+            
+            setSaving(true);
+            
+            // 创建新章节
+            const newSection = {
+              title: sectionTitle,
+              slug: sectionSlug,
+              description: '从飞书导入的章节',
+              lessons: [{
+                title: lessonTitle,
+                type: 'TEXT_ONLY',
+                content: content,
+                isFree: false,
+                order: 1
+              }]
+            };
+            
+            try {
+              // 保存
+              const res = await fetch('/api/admin/courses/sections', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newSection)
+              });
+              
+              if (res.ok) {
+                const result = await res.json();
+                alert(result.message || '添加成功！');
+                // 清空表单
+                (document.getElementById('quick-section-title') as HTMLInputElement).value = '';
+                (document.getElementById('quick-section-slug') as HTMLInputElement).value = '';
+                (document.getElementById('quick-lesson-title') as HTMLInputElement).value = '';
+                setContent('');
+                onSuccess();
+              } else {
+                const error = await res.json();
+                alert(`添加失败: ${error.details || error.error || '未知错误'}`);
+              }
+            } catch (error) {
+              alert('保存失败：' + error);
+            } finally {
+              setSaving(false);
+            }
+          }}
+          className="w-full py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400"
+          disabled={saving}
+        >
+          {saving ? '正在保存...' : '快速创建课程'}
+        </button>
+      </div>
+    </div>
+  );
 }
 
 export default function CourseAdminPage() {
@@ -137,12 +243,12 @@ export default function CourseAdminPage() {
       console.log('服务器响应:', data);
 
       if (response.ok) {
-        alert('保存成功！');
+        alert(data.message || '保存成功！');
         await fetchSections();
         setEditingSection(null);
       } else {
         console.error('保存失败:', data);
-        alert(`保存失败: ${data.error || '请重试'}`);
+        alert(`保存失败: ${data.details || data.error || '请重试'}`);
       }
     } catch (error) {
       console.error('Save error:', error);
@@ -159,13 +265,29 @@ export default function CourseAdminPage() {
       <div className="max-w-6xl mx-auto">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900">课程内容管理</h1>
-          <button
-            onClick={addNewSection}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap"
-          >
-            <Plus className="w-5 h-5" />
-            添加新章节
-          </button>
+          <div className="flex gap-3 flex-wrap">
+            <button
+              onClick={() => router.push('/admin/courses/import-step')}
+              className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors whitespace-nowrap"
+            >
+              <FileText className="w-5 h-5" />
+              分步导入
+            </button>
+            <button
+              onClick={() => router.push('/admin/courses/import')}
+              className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors whitespace-nowrap"
+            >
+              <Upload className="w-5 h-5" />
+              批量导入
+            </button>
+            <button
+              onClick={addNewSection}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap"
+            >
+              <Plus className="w-5 h-5" />
+              添加新章节
+            </button>
+          </div>
         </div>
 
         <div className="space-y-6">
@@ -300,13 +422,12 @@ export default function CourseAdminPage() {
                         </div>
                       )}
 
-                      {/* 临时使用textarea，确保基本功能正常 */}
-                      <textarea
+                      {/* 使用增强编辑器 */}
+                      <EnhancedEditor
                         value={lesson.content}
-                        onChange={(e) => updateLesson(sectionIndex, lessonIndex, 'content', e.target.value)}
-                        className="w-full px-3 py-2 border rounded"
-                        placeholder="课时内容（支持Markdown格式）"
-                        rows={6}
+                        onChange={(value) => updateLesson(sectionIndex, lessonIndex, 'content', value)}
+                        placeholder="课时内容（支持从飞书粘贴图文内容）"
+                        minHeight="150px"
                       />
 
                       <div className="flex justify-between items-center">
@@ -333,8 +454,11 @@ export default function CourseAdminPage() {
           ))}
         </div>
 
+        {/* 快速添加内容区域 */}
+        <QuickContentCreator onSuccess={() => fetchSections()} />
+
         {/* 使用说明 */}
-        <div className="mt-12 bg-blue-50 rounded-lg p-6">
+        <div className="mt-6 bg-blue-50 rounded-lg p-6">
           <h2 className="text-lg font-semibold text-blue-900 mb-4">使用说明</h2>
           <ul className="space-y-2 text-blue-800">
             <li>• 点击章节标题左侧的箭头展开/收起课时列表</li>

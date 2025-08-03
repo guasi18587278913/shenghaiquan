@@ -25,14 +25,25 @@ export default function LessonContent({ lesson }: LessonContentProps) {
   const fetchWordpressContent = async (slug: string) => {
     setLoading(true);
     try {
-      const response = await fetch(`http://111.231.19.162/index.php?rest_route=/wp/v2/posts&slug=${slug}`);
-      const data = await response.json();
+      // 先尝试从文章中获取
+      let response = await fetch(`http://111.231.19.162/index.php?rest_route=/wp/v2/posts&slug=${slug}`);
+      let data = await response.json();
+      
+      // 如果文章中没有找到，尝试从页面中获取
+      if (!data || data.length === 0) {
+        response = await fetch(`http://111.231.19.162/index.php?rest_route=/wp/v2/pages&slug=${slug}`);
+        data = await response.json();
+      }
       
       if (data && data.length > 0) {
         setWordpressContent(data[0].content.rendered);
+      } else {
+        console.log('No content found for slug:', slug);
+        setWordpressContent('<p>未找到相关内容，请检查课程配置。</p>');
       }
     } catch (error) {
       console.error('Failed to fetch WordPress content:', error);
+      setWordpressContent('<p>加载内容失败，请稍后重试。</p>');
     } finally {
       setLoading(false);
     }

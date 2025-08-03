@@ -1,0 +1,229 @@
+'use client';
+
+import { useEffect, useRef, useState } from 'react';
+import { useSession } from 'next-auth/react';
+
+interface Message {
+  id: string;
+  from: string;
+  to: string;
+  content: string;
+  time: number;
+  type: 'text' | 'image' | 'file';
+}
+
+interface Conversation {
+  id: string;
+  userId: string;
+  userName: string;
+  avatar?: string;
+  lastMessage?: Message;
+  unreadCount: number;
+}
+
+export function useIM() {
+  const { data: session } = useSession();
+  const [isReady, setIsReady] = useState(false);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [messages, setMessages] = useState<Record<string, Message[]>>({});
+  const timRef = useRef<any>(null);
+
+  useEffect(() => {
+    if (!session?.user) return;
+
+    const initIM = async () => {
+      try {
+        // 获取 UserSig
+        const response = await fetch('/api/im/usersig');
+        const { userId, userSig, sdkAppId } = await response.json();
+
+        // 动态导入 tim-js-sdk
+        const TIM = (await import('tim-js-sdk')).default;
+        
+        // 创建 TIM 实例
+        const tim = TIM.create({
+          SDKAppID: Number(sdkAppId)
+        });
+
+        // 设置日志级别
+        tim.setLogLevel(1);
+
+        // 监听事件
+        tim.on(TIM.EVENT.SDK_READY, onSDKReady);
+        tim.on(TIM.EVENT.MESSAGE_RECEIVED, onMessageReceived);
+        tim.on(TIM.EVENT.CONVERSATION_LIST_UPDATED, onConversationUpdate);
+        tim.on(TIM.EVENT.SDK_NOT_READY, onSDKNotReady);
+
+        // 登录
+        await tim.login({
+          userID: userId,
+          userSig: userSig
+        });
+
+        timRef.current = tim;
+      } catch (error) {
+        console.error('IM初始化失败:', error);
+      }
+    };
+
+    initIM();
+
+    return () => {
+      if (timRef.current) {
+        timRef.current.logout();
+      }
+    };
+  }, [session]);
+
+  // SDK 就绪
+  const onSDKReady = () => {
+    console.log('IM SDK Ready');
+    setIsReady(true);
+  };
+
+  // SDK 未就绪
+  const onSDKNotReady = () => {
+    console.log('IM SDK Not Ready');
+    setIsReady(false);
+  };
+
+  // 收到新消息
+  const onMessageReceived = (event: any) => {
+    const messageList = event.data;
+    messageList.forEach((message: any) => {
+      const formattedMessage: Message = {
+        id: message.ID,
+        from: message.from,
+        to: message.to,
+        content: message.payload.text || '',
+        time: message.time * 1000,
+        type: 'text'
+      };
+
+      setMessages(prev => {
+        const conversationId = message.conversationID;
+        return {
+          ...prev,
+          [conversationId]: [...(prev[conversationId] || []), formattedMessage]
+        };
+      });
+    });
+  };
+
+  // 会话列表更新
+  const onConversationUpdate = (event: any) => {
+    const conversationList = event.data;
+    const formattedConversations = conversationList.map((conv: any) => ({
+      id: conv.conversationID,
+      userId: conv.userProfile?.userID || '',
+      userName: conv.userProfile?.nick || conv.userProfile?.userID || '未知用户',
+      avatar: conv.userProfile?.avatar,
+      lastMessage: conv.lastMessage ? {
+        id: conv.lastMessage.ID,
+        from: conv.lastMessage.from,
+        to: conv.lastMessage.to,
+        content: conv.lastMessage.messageForShow,
+        time: conv.lastMessage.time * 1000,
+        type: 'text' as const
+      } : undefined,
+      unreadCount: conv.unreadCount || 0
+    }));
+    setConversations(formattedConversations);
+  };
+
+  // 发送文本消息
+  const sendTextMessage = async (toUserId: string, text: string) => {
+    if (!timRef.current || !isReady) {
+      console.error('IM未就绪');
+      return;
+    }
+
+    try {
+      const TIM = (await import('tim-js-sdk')).default;
+      const message = timRef.current.createTextMessage({
+        to: toUserId,
+        conversationType: TIM.TYPES.CONV_C2C,
+        payload: {
+          text: text
+        }
+      });
+
+      const result = await timRef.current.sendMessage(message);
+      console.log('消息发送成功:', result);
+      
+      // 添加到本地消息列表
+      const formattedMessage: Message = {
+        id: message.ID,
+        from: session?.user?.id || '',
+        to: toUserId,
+        content: text,
+        time: Date.now(),
+        type: 'text'
+      };
+
+      setMessages(prev => {
+        const conversationId = `C2C${toUserId}`;
+        return {
+          ...prev,
+          [conversationId]: [...(prev[conversationId] || []), formattedMessage]
+        };
+      });
+
+      return result;
+    } catch (error) {
+      console.error('发送消息失败:', error);
+      throw error;
+    }
+  };
+
+  // 获取会话消息列表
+  const getMessageList = async (conversationId: string) => {
+    if (!timRef.current || !isReady) return [];
+
+    try {
+      const result = await timRef.current.getMessageList({
+        conversationID: conversationId,
+        count: 20
+      });
+
+      const formattedMessages = result.data.messageList.map((msg: any) => ({
+        id: msg.ID,
+        from: msg.from,
+        to: msg.to,
+        content: msg.payload.text || '',
+        time: msg.time * 1000,
+        type: 'text' as const
+      }));
+
+      setMessages(prev => ({
+        ...prev,
+        [conversationId]: formattedMessages
+      }));
+
+      return formattedMessages;
+    } catch (error) {
+      console.error('获取消息列表失败:', error);
+      return [];
+    }
+  };
+
+  // 标记已读
+  const markAsRead = async (conversationId: string) => {
+    if (!timRef.current || !isReady) return;
+
+    try {
+      await timRef.current.setMessageRead({ conversationID: conversationId });
+    } catch (error) {
+      console.error('标记已读失败:', error);
+    }
+  };
+
+  return {
+    isReady,
+    conversations,
+    messages,
+    sendTextMessage,
+    getMessageList,
+    markAsRead
+  };
+}

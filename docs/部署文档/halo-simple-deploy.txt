@@ -1,0 +1,24 @@
+# 简化版 Halo 部署（不用 docker-compose）
+
+# 1. 先删除之前的容器（如果有）
+docker rm -f halo
+
+# 2. 创建数据目录
+mkdir -p /root/halo_data
+
+# 3. 直接运行 Halo（使用内置数据库）
+docker run -d --name halo --restart=always -p 8090:8090 -v /root/halo_data:/root/.halo2 -e HALO_EXTERNAL_URL=http://111.231.19.162:8090 halohub/halo:2.10
+
+# 4. 等待 30 秒让服务启动
+sleep 30
+
+# 5. 检查容器状态
+docker ps
+
+# 6. 检查服务是否正常
+curl http://localhost:8090
+
+# 7. 如果需要查看日志
+docker logs halo
+
+# 访问地址：http://111.231.19.162:8090

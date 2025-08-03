@@ -19,6 +19,18 @@ export async function POST(request: Request) {
     const data = await request.json();
     console.log('接收到的数据:', data);
     
+    // 检查slug是否已存在
+    const existingSection = await prisma.courseSection.findUnique({
+      where: { slug: data.slug }
+    });
+    
+    if (existingSection) {
+      // 如果slug已存在，添加时间戳使其唯一
+      const timestamp = Date.now();
+      data.slug = `${data.slug}-${timestamp}`;
+      console.log(`URL标识已存在，自动生成新的标识: ${data.slug}`);
+    }
+    
     // 创建章节
     const section = await prisma.courseSection.create({
       data: {
@@ -34,7 +46,7 @@ export async function POST(request: Request) {
     const course = await prisma.course.create({
       data: {
         title: data.title,
-        slug: data.slug,
+        slug: `${data.slug}-course`, // 添加后缀避免与章节slug冲突
         description: data.description,
         sectionId: section.id,
         order: 1,
@@ -69,7 +81,11 @@ export async function POST(request: Request) {
       }
     }
 
-    return NextResponse.json({ success: true, section });
+    return NextResponse.json({ 
+      success: true, 
+      section,
+      message: existingSection ? `URL标识已存在，已自动更改为: ${data.slug}` : '创建成功'
+    });
   } catch (error: any) {
     console.error('Create section error:', error);
     return NextResponse.json(

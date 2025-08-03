@@ -1,0 +1,38 @@
+# Halo 部署命令（直接复制使用）
+
+# 1. 安装 docker-compose（第一个命令）
+curl -L "https://github.com/docker/compose/releases/download/v2.20.0/docker-compose-linux-x86_64" -o /usr/local/bin/docker-compose
+
+# 2. 设置执行权限
+chmod +x /usr/local/bin/docker-compose
+
+# 3. 验证安装
+docker-compose --version
+
+# 4. 创建配置文件（一次性复制下面所有行）
+cat > docker-compose.yml << EOF
+version: "3"
+services:
+  halo:
+    image: halohub/halo:2.10
+    container_name: halo
+    restart: always
+    ports:
+      - "8090:8090"
+    volumes:
+      - ./halo_data:/root/.halo2
+    environment:
+      - HALO_EXTERNAL_URL=http://111.231.19.162:8090
+EOF
+
+# 5. 启动 Halo
+docker-compose up -d
+
+# 6. 查看容器状态
+docker ps
+
+# 7. 查看日志（如果需要）
+docker-compose logs -f
+
+# 访问地址：http://111.231.19.162:8090
+# 首次访问会进入安装向导

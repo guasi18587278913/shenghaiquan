@@ -1,4 +1,0 @@
--- 在宝塔终端执行
-psql -U guasi -d deepsea -h localhost << 'EOF'
-CREATE TYPE "MembershipTier" AS ENUM ('FREE', 'ANNUAL');
-EOF

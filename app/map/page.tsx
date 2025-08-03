@@ -146,7 +146,9 @@ export default function MapPage() {
 
       const response = await fetch('/api/users/locations')
       if (!response.ok) {
-        throw new Error('获取位置数据失败')
+        const errorText = await response.text()
+        console.error('API Error:', response.status, errorText)
+        throw new Error(`获取位置数据失败: ${response.status}`)
       }
 
       const data = await response.json()
@@ -173,6 +175,7 @@ export default function MapPage() {
 
       setLocationData(cityData)
     } catch (err) {
+      console.error('Error fetching location data:', err)
       setError(err instanceof Error ? err.message : '获取位置数据失败')
     } finally {
       setLoading(false)

@@ -1,0 +1,53 @@
+cat > docker-compose.yml << 'EOF'
+version: "3"
+
+services:
+  halo:
+    image: halohub/halo:2.19
+    container_name: halo
+    restart: on-failure:3
+    depends_on:
+      halodb:
+        condition: service_healthy
+    networks:
+      halo_network:
+    volumes:
+      - ./:/root/.halo2
+    ports:
+      - "8090:8090"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8090/actuator/health/readiness"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    command:
+      - --spring.r2dbc.url=r2dbc:pool:postgresql://halodb/halo
+      - --spring.r2dbc.username=halo
+      - --spring.r2dbc.password=openpostgresql
+      - --spring.sql.init.platform=postgresql
+      - --halo.external-url=http://111.231.19.162:8090
+      - --halo.security.initializer.superadminusername=admin
+      - --halo.security.initializer.superadminpassword=P@88w0rd
+
+  halodb:
+    image: postgres:15
+    container_name: halodb
+    restart: on-failure:3
+    networks:
+      halo_network:
+    volumes:
+      - ./db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "halo"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    environment:
+      - POSTGRES_PASSWORD=openpostgresql
+      - POSTGRES_USER=halo
+      - POSTGRES_DB=halo
+
+networks:
+  halo_network:
+EOF

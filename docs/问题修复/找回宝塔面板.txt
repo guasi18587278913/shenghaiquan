@@ -1,0 +1,21 @@
+# 找回已安装的宝塔面板
+
+# 1. 查看宝塔面板信息（如果已安装）
+bt default
+
+# 如果上面命令不存在，试试这个
+/etc/init.d/bt default
+
+# 2. 如果忘记密码，重置密码
+bt 5
+
+# 3. 查看面板端口（默认是8888）
+netstat -tlnp | grep 888
+
+# 4. 确保防火墙开放了8888端口
+firewall-cmd --zone=public --add-port=8888/tcp --permanent
+firewall-cmd --reload
+
+# 访问地址通常是：
+# http://111.231.19.162:8888
+# 或者您可能已经改过端口

@@ -1,0 +1,85 @@
+// IM相关数据模型（添加到现有schema.prisma中）
+
+// 会话表
+model Conversation {
+  id           String   @id @default(cuid())
+  type         String   // 'C2C' | 'GROUP'
+  name         String?  // 群聊名称
+  avatar       String?  // 群聊头像
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  participants ConversationParticipant[]
+  messages     Message[]
+}
+
+// 会话参与者
+model ConversationParticipant {
+  id             String   @id @default(cuid())
+  conversationId String
+  userId         String
+  joinedAt       DateTime @default(now())
+  lastReadAt     DateTime @default(now())
+  unreadCount    Int      @default(0)
+  
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+  user          User         @relation(fields: [userId], references: [id])
+  
+  @@unique([conversationId, userId])
+}
+
+// 消息表
+model Message {
+  id             String   @id @default(cuid())
+  conversationId String
+  senderId       String
+  type           String   @default("text") // 'text' | 'image' | 'file' | 'video'
+  content        String   @db.Text
+  metadata       Json?    // 存储额外信息，如文件URL、图片尺寸等
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  deletedAt      DateTime?
+  
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+  sender        User         @relation(fields: [senderId], references: [id])
+  readBy        MessageRead[]
+}
+
+// 消息已读记录
+model MessageRead {
+  id        String   @id @default(cuid())
+  messageId String
+  userId    String
+  readAt    DateTime @default(now())
+  
+  message   Message  @relation(fields: [messageId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+  
+  @@unique([messageId, userId])
+}
+
+// 用户在线状态
+model UserOnlineStatus {
+  id         String   @id @default(cuid())
+  userId     String   @unique
+  isOnline   Boolean  @default(false)
+  lastSeenAt DateTime @default(now())
+  platform   String?  // 'web' | 'mobile' | 'desktop'
+  
+  user       User     @relation(fields: [userId], references: [id])
+}
+
+// 更新User模型（添加IM相关字段）
+model User {
+  // ... 现有字段 ...
+  
+  // IM相关
+  conversations  ConversationParticipant[]
+  sentMessages   Message[]
+  readMessages   MessageRead[]
+  onlineStatus   UserOnlineStatus?
+  
+  // IM设置
+  allowChat      Boolean @default(true)  // 是否允许他人发起聊天
+  chatNotification Boolean @default(true) // 是否接收聊天通知
+}

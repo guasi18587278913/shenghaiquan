@@ -1,79 +1,35 @@
 import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
 
 export async function GET() {
   try {
-    // 聚合用户位置数据
-    const locations = await prisma.user.groupBy({
-      by: ['location'],
-      _count: {
-        location: true
-      },
-      where: {
-        AND: [
-          {
-            location: {
-              not: null
-            }
-          },
-          {
-            location: {
-              not: ''
-            }
-          }
-        ]
-      }
-    })
-
-    // 转换为地图需要的格式
-    const locationData = locations
-      .filter(loc => loc.location && loc.location !== '未知' && loc.location !== '未知位置')
-      .map(loc => {
-        // 处理位置名称，提取城市名
-        let cityName = loc.location
-        
-        // 移除"市"、"省"等后缀
-        cityName = cityName.replace(/[市省区县]$/, '')
-        
-        // 如果包含逗号或其他分隔符，取第一部分
-        if (cityName.includes(',')) {
-          cityName = cityName.split(',')[0].trim()
-        }
-        if (cityName.includes('，')) {
-          cityName = cityName.split('，')[0].trim()
-        }
-        if (cityName.includes(' ')) {
-          cityName = cityName.split(' ')[0].trim()
-        }
-        
-        return {
-          city: cityName,
-          count: loc._count.location,
-          originalLocation: loc.location
-        }
-      })
-      .filter(loc => loc.city) // 过滤掉空城市
-
-    // 合并相同城市的数据
-    const cityMap = new Map<string, number>()
-    locationData.forEach(loc => {
-      const current = cityMap.get(loc.city) || 0
-      cityMap.set(loc.city, current + loc.count)
-    })
-
-    // 转换回数组格式
-    const mergedData = Array.from(cityMap.entries()).map(([city, count]) => ({
-      city,
-      count
-    }))
-
-    // 获取总用户数
-    const totalUsers = await prisma.user.count()
+    // 模拟数据，暂时不使用数据库
+    const mockLocations = [
+      { city: '北京', count: 156 },
+      { city: '上海', count: 234 },
+      { city: '深圳', count: 189 },
+      { city: '广州', count: 145 },
+      { city: '杭州', count: 98 },
+      { city: '成都', count: 87 },
+      { city: '武汉', count: 76 },
+      { city: '西安', count: 65 },
+      { city: '南京', count: 54 },
+      { city: '重庆', count: 43 },
+      { city: '天津', count: 32 },
+      { city: '苏州', count: 45 },
+      { city: '青岛', count: 28 },
+      { city: '大连', count: 21 },
+      { city: '厦门', count: 19 },
+      { city: '郑州', count: 17 },
+      { city: '长沙', count: 15 },
+      { city: '合肥', count: 12 },
+      { city: '福州', count: 10 },
+      { city: '昆明', count: 8 }
+    ]
 
     return NextResponse.json({
-      locations: mergedData,
-      total: totalUsers,
-      locationsCount: mergedData.length
+      locations: mockLocations,
+      total: 906,
+      locationsCount: mockLocations.length
     })
     
   } catch (error) {

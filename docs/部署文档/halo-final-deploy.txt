@@ -1,0 +1,24 @@
+# 最终部署命令（按顺序执行）
+
+# 1. 强制删除所有名为 halo 的容器
+docker rm -f halo
+
+# 2. 确认删除成功
+docker ps -a | grep halo
+
+# 3. 使用最新稳定版本部署
+docker run -d --name halo --restart=always -p 8090:8090 -v /root/halo_data:/root/.halo2 -e HALO_EXTERNAL_URL=http://111.231.19.162:8090 halohub/halo:latest
+
+# 4. 等待10秒
+sleep 10
+
+# 5. 检查容器是否在运行
+docker ps
+
+# 6. 查看日志（检查是否有错误）
+docker logs halo --tail 50
+
+# 7. 测试访问
+curl -I http://localhost:8090
+
+# 如果一切正常，访问：http://111.231.19.162:8090

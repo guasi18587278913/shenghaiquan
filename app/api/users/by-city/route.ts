@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
 
 export async function GET(request: Request) {
   try {
@@ -11,41 +10,69 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: '需要提供城市参数' }, { status: 400 })
     }
     
-    // 获取该城市的用户
-    const users = await prisma.user.findMany({
-      where: {
-        location: city
+    // 模拟用户数据
+    const mockUsers = [
+      {
+        id: '1',
+        name: '张三',
+        avatar: '/avatars/user1.jpg',
+        position: '前端工程师',
+        company: '深海科技',
+        role: 'USER'
       },
-      select: {
-        id: true,
-        name: true,
-        avatar: true,
-        position: true,
-        company: true,
-        role: true
+      {
+        id: '2',
+        name: '李四',
+        avatar: '/avatars/user2.jpg',
+        position: '后端工程师',
+        company: '海洋集团',
+        role: 'USER'
       },
-      take: limit,
-      orderBy: {
-        points: 'desc' // 按积分排序，积分高的更活跃
+      {
+        id: '3',
+        name: '王五',
+        avatar: '/avatars/user3.jpg',
+        position: '产品经理',
+        company: '蓝海创新',
+        role: 'USER'
+      },
+      {
+        id: '4',
+        name: '赵六',
+        avatar: null,
+        position: 'UI设计师',
+        company: '深海设计',
+        role: 'USER'
+      },
+      {
+        id: '5',
+        name: '陈七',
+        avatar: null,
+        position: '数据分析师',
+        company: '海数科技',
+        role: 'USER'
       }
-    })
+    ]
     
-    // 获取该城市的总用户数
-    const total = await prisma.user.count({
-      where: {
-        location: city
-      }
-    })
+    // 根据城市返回不同数量的用户
+    const cityUserCount = {
+      '北京': 156,
+      '上海': 234,
+      '深圳': 189,
+      '广州': 145,
+      '杭州': 98,
+      '成都': 87,
+      '武汉': 76,
+      '西安': 65,
+      '南京': 54,
+      '重庆': 43
+    }
     
-    // 处理用户数据中的空值和默认值
-    const processedUsers = users.map(user => ({
-      ...user,
-      position: user.position && user.position !== '企业员工/创业公司员工' ? user.position : '暂未填写',
-      company: user.company && user.company !== '互联网行业' ? user.company : '暂未填写'
-    }))
+    const total = cityUserCount[city as keyof typeof cityUserCount] || Math.floor(Math.random() * 50) + 5
+    const users = mockUsers.slice(0, Math.min(limit, mockUsers.length))
     
     return NextResponse.json({
-      users: processedUsers,
+      users,
       total,
       city
     })
