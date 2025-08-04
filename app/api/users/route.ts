@@ -1,7 +1,66 @@
 import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+// import { prisma } from '@/lib/prisma'
 
 export async function GET(request: Request) {
+  try {
+    // 临时返回模拟数据
+    const mockUsers = [
+      {
+        id: '1',
+        name: '张三',
+        avatar: null,
+        location: '北京',
+        company: '深海科技',
+        position: '产品经理',
+        bio: '专注于AI产品设计',
+        skills: ['产品设计', 'AI', '用户研究'],
+        level: 5,
+        points: 1200,
+        role: 'USER',
+        createdAt: new Date().toISOString(),
+        online: true
+      },
+      {
+        id: '2',
+        name: '李四',
+        avatar: null,
+        location: '上海',
+        company: '创新工场',
+        position: '技术总监',
+        bio: '全栈开发工程师',
+        skills: ['React', 'Node.js', 'Python'],
+        level: 8,
+        points: 2500,
+        role: 'ADMIN',
+        createdAt: new Date().toISOString(),
+        online: false
+      },
+      {
+        id: '3',
+        name: '王五',
+        avatar: null,
+        location: '深圳',
+        company: 'AI Lab',
+        position: '算法工程师',
+        bio: '深度学习研究',
+        skills: ['机器学习', 'TensorFlow', 'PyTorch'],
+        level: 6,
+        points: 1800,
+        role: 'USER',
+        createdAt: new Date().toISOString(),
+        online: true
+      }
+    ]
+    
+    return NextResponse.json({
+      users: mockUsers,
+      total: 3,
+      page: 1,
+      pageSize: 20,
+      totalPages: 1
+    })
+    
+    /* 原始代码暂时注释
   try {
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get('page') || '1')
