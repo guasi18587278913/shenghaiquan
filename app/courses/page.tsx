@@ -183,7 +183,7 @@ export default function CoursesPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
           >
-            <Link href="/courses/preface/intro">
+            <Link href="/courses/preface">
               <div className="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden h-full">
                 {/* 顶部大图标区域 */}
                 <div className="relative h-48 bg-gradient-to-r from-[#14b8a6] to-[#0891b2] p-8 flex flex-col items-center justify-center">
@@ -246,7 +246,7 @@ export default function CoursesPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
           >
-            <Link href="/courses/basic/play-with-cursor">
+            <Link href="/courses/basic">
               <div className="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden h-full">
                 {/* 顶部大图标区域 */}
                 <div className="relative h-48 bg-[#a78bfa] p-8 flex flex-col items-center justify-center">
@@ -306,7 +306,7 @@ export default function CoursesPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
           >
-            <Link href="/courses/cognition/ai-product-thinking">
+            <Link href="/courses/core">
               <div className="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden h-full">
                 {/* 顶部大图标区域 */}
                 <div className="relative h-48 bg-[#fdba74] p-8 flex flex-col items-center justify-center">
@@ -372,7 +372,7 @@ export default function CoursesPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
           >
-            <Link href="/courses/skills/programming-basics">
+            <Link href="/courses/skills">
               <div className="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden h-full">
                 {/* 顶部大图标区域 */}
                 <div className="relative h-48 bg-[#c084fc] p-8 flex flex-col items-center justify-center">
@@ -438,7 +438,7 @@ export default function CoursesPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
           >
-            <Link href="/courses/advanced/mvp-to-scale">
+            <Link href="/courses/advanced">
               <div className="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden h-full">
                 {/* 顶部大图标区域 */}
                 <div className="relative h-48 bg-[#86efac] p-8 flex flex-col items-center justify-center">
@@ -504,7 +504,7 @@ export default function CoursesPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6 }}
           >
-            <Link href="/courses/qa/common-questions">
+            <Link href="/courses/appendix">
               <div className="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden h-full">
                 {/* 顶部大图标区域 */}
                 <div className="relative h-48 bg-[#64748b] p-8 flex flex-col items-center justify-center">

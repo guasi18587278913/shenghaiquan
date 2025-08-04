@@ -2,6 +2,8 @@ import { notFound } from 'next/navigation';
 import { getSection, getCourse } from '@/lib/course-data';
 import CourseDetailClient from './course-detail-client';
 import { getCourseWithContent } from '@/lib/db-direct';
+import { getLesson } from '@/lib/strapi-api';
+import CourseraStyleClient from './coursera-style-client';
 
 // 尝试从数据库获取数据的函数
 async function fetchFromDatabase(sectionSlug: string, courseSlug: string) {
@@ -63,7 +65,25 @@ export default async function CourseDetailPageHybrid({
 }) {
   const { sectionSlug, courseSlug } = await params;
   
-  // 首先尝试从数据库获取
+  // 首先尝试从Strapi获取数据（新的Coursera风格）
+  const strapiLesson = await getLesson(courseSlug);
+  if (strapiLesson && strapiLesson.modules && strapiLesson.modules.length > 0) {
+    // 使用新的Coursera风格
+    const section = await getSection(sectionSlug) || {
+      id: sectionSlug,
+      documentId: sectionSlug,
+      title: '基础篇',
+      slug: sectionSlug,
+      description: '',
+      order: 0,
+      createdAt: '',
+      updatedAt: '',
+      publishedAt: ''
+    };
+    return <CourseraStyleClient section={section} lesson={strapiLesson} />;
+  }
+  
+  // 如果Strapi没有数据或没有modules，尝试从数据库获取
   let processedData = await fetchFromDatabase(sectionSlug, courseSlug);
   
   // 如果数据库没有数据，使用静态数据

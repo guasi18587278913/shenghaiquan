@@ -26,6 +26,27 @@ export interface StrapiLesson {
   duration?: string;
   content: string;
   section?: StrapiSection;
+  modules?: StrapiModule[];
+  createdAt: string;
+  updatedAt: string;
+  publishedAt: string;
+}
+
+export interface StrapiModule {
+  id: number;
+  documentId: string;
+  title: string;
+  type: 'video' | 'reading' | 'assignment' | 'quiz' | 'discussion' | 'resource';
+  order: number;
+  duration?: string;
+  content?: string;
+  videoUrl?: string;
+  assignmentDeadline?: string;
+  assignmentPoints?: number;
+  quizQuestions?: any;
+  resourceFiles?: any;
+  lesson?: StrapiLesson;
+  isCompleted?: boolean;
   createdAt: string;
   updatedAt: string;
   publishedAt: string;
@@ -92,33 +113,105 @@ export async function getSection(slug: string): Promise<StrapiSection | null> {
 export async function getSectionLessons(sectionId: number): Promise<StrapiLesson[]> {
   try {
     const response = await fetch(
-      `${STRAPI_API_URL}/api/lessons?filters[section][id][$eq]=${sectionId}&sort=order&populate=section`
+      `${STRAPI_API_URL}/api/lessons?filters[section][id][$eq]=${sectionId}&sort=order&populate[section]=true&populate[modules]=true`
     );
     if (!response.ok) {
       throw new Error('Failed to fetch lessons');
     }
     const result: StrapiResponse<StrapiLesson[]> = await response.json();
-    return result.data;
+    return result.data || [];
   } catch (error) {
     console.error('Error fetching lessons:', error);
     return [];
   }
 }
 
-// 获取单个课程
+// 获取单个课程（包含所有模块）
 export async function getLesson(slug: string): Promise<StrapiLesson | null> {
   try {
-    const response = await fetch(
-      `${STRAPI_API_URL}/api/lessons?filters[slug][$eq]=${slug}&populate=section`
+    // 使用深度populate来获取modules - Strapi v5语法
+    const queryString = `filters[slug][$eq]=${slug}&populate[modules]=true&populate[section]=true`;
+    
+    let response = await fetch(
+      `${STRAPI_API_URL}/api/lessons?${queryString}`
     );
+    
     if (!response.ok) {
+      console.error('Strapi API error:', response.status, response.statusText);
       throw new Error('Failed to fetch lesson');
     }
-    const result: StrapiResponse<StrapiLesson[]> = await response.json();
-    return result.data[0] || null;
+    
+    let result: StrapiResponse<any> = await response.json();
+    
+    // 如果通过slug没找到，尝试通过title查询（临时方案）
+    if (!result.data || result.data.length === 0) {
+      console.log('No lesson found with slug:', slug);
+      // 尝试获取所有课程看看有什么
+      response = await fetch(`${STRAPI_API_URL}/api/lessons?populate=*`);
+      if (response.ok) {
+        result = await response.json();
+        console.log('Available lessons:', result.data?.map((l: any) => ({
+          id: l.id,
+          title: l.title,
+          slug: l.slug,
+          hasModules: l.modules?.length > 0
+        })));
+      }
+    }
+    
+    // Strapi v5 返回的数据结构调整
+    if (result.data && result.data[0]) {
+      const lesson = result.data[0];
+      return {
+        ...lesson,
+        ...lesson.attributes,
+        modules: lesson.modules || []
+      };
+    }
+    
+    return null;
   } catch (error) {
     console.error('Error fetching lesson:', error);
     return null;
+  }
+}
+
+// 获取课程的所有模块
+export async function getLessonModules(lessonId: number): Promise<StrapiModule[]> {
+  try {
+    const response = await fetch(
+      `${STRAPI_API_URL}/api/modules?filters[lesson][id][$eq]=${lessonId}&sort=order`
+    );
+    if (!response.ok) {
+      throw new Error('Failed to fetch modules');
+    }
+    const result: StrapiResponse<StrapiModule[]> = await response.json();
+    return result.data;
+  } catch (error) {
+    console.error('Error fetching modules:', error);
+    return [];
+  }
+}
+
+// 更新模块完成状态
+export async function updateModuleCompletion(moduleId: number, isCompleted: boolean): Promise<boolean> {
+  try {
+    const response = await fetch(
+      `${STRAPI_API_URL}/api/modules/${moduleId}`,
+      {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          data: { isCompleted }
+        })
+      }
+    );
+    return response.ok;
+  } catch (error) {
+    console.error('Error updating module completion:', error);
+    return false;
   }
 }
 

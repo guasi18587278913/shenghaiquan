@@ -75,3 +75,4 @@ clean-and-start.sh
 *.swo
 .DS_Store
 .env
+deepsea-cms/.tmp/

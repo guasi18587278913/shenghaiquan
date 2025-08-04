@@ -62,6 +62,12 @@
       "options": {
         "preset": "defaultHtml"
       }
+    },
+    "modules": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::module.module",
+      "mappedBy": "lesson"
     }
   }
 }

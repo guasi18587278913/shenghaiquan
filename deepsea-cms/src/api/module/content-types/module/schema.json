@@ -1,0 +1,78 @@
+{
+  "kind": "collectionType",
+  "collectionName": "modules",
+  "info": {
+    "singularName": "module",
+    "pluralName": "modules",
+    "displayName": "Module",
+    "description": "课程模块 - 支持视频、阅读、作业等多种类型"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": true
+    },
+    "type": {
+      "type": "enumeration",
+      "enum": [
+        "video",
+        "reading",
+        "assignment",
+        "quiz",
+        "discussion",
+        "resource"
+      ],
+      "required": true
+    },
+    "order": {
+      "type": "integer",
+      "required": true,
+      "default": 0
+    },
+    "duration": {
+      "type": "string"
+    },
+    "content": {
+      "type": "customField",
+      "customField": "plugin::ckeditor5.CKEditor",
+      "options": {
+        "preset": "defaultHtml"
+      }
+    },
+    "videoUrl": {
+      "type": "string"
+    },
+    "assignmentDeadline": {
+      "type": "datetime"
+    },
+    "assignmentPoints": {
+      "type": "integer"
+    },
+    "quizQuestions": {
+      "type": "json"
+    },
+    "resourceFiles": {
+      "type": "media",
+      "multiple": true,
+      "allowedTypes": [
+        "files",
+        "images",
+        "videos"
+      ]
+    },
+    "lesson": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::lesson.lesson",
+      "inversedBy": "modules"
+    },
+    "isCompleted": {
+      "type": "boolean",
+      "default": false
+    }
+  }
+}
